@@ -3,6 +3,8 @@ import Login from './pages/Login';
 import DashboardLayout from './layouts/DashboardLayout';
 import Dashboard from './pages/Dashboard';
 import Employees from './pages/Employees';
+import LeadsList from './pages/LeadsList';
+import LeadForm from './pages/LeadForm';
 
 function App() {
     return (
@@ -14,8 +16,9 @@ function App() {
                 <Route path="/" element={<DashboardLayout />}>
                     <Route index element={<Dashboard />} />
                     <Route path="employees" element={<Employees />} />
-                    <Route path="leads" element={<div className="font-bold text-2xl">Leads Work In Progress</div>} />
-                    <Route path="followups" element={<div className="font-bold text-2xl">Followups Work In Progress</div>} />
+                    <Route path="leads" element={<LeadsList />} />
+                    <Route path="leads/new" element={<LeadForm />} />
+                    <Route path="followups" element={<div className="font-bold text-2xl">Followups Work In Progress...</div>} />
                     <Route path="profile" element={<div className="font-bold text-2xl">Profile Work In Progress</div>} />
                 </Route>
 
