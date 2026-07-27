@@ -4,7 +4,10 @@ const getLeads = async (req, res, next) => {
     try {
         const query = {};
 
-        // Handling Search and Filters
+        // If the logged in user is a Standard Employee, lock down the visibility scope
+        if (req.user && req.user.role === 'Employee') {
+            query.assignedEmployee = req.user.id;
+        }
         if (req.query.status) query.status = req.query.status;
         if (req.query.priority) query.priority = req.query.priority;
         if (req.query.search) {
@@ -56,6 +59,16 @@ const updateLeadStatus = async (req, res, next) => {
     }
 };
 
+const updateLead = async (req, res, next) => {
+    try {
+        const lead = await Lead.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        if (!lead) return res.status(404).json({ message: 'Lead not found' });
+        res.json({ message: 'Lead updated completely', lead });
+    } catch (error) {
+        next(error);
+    }
+};
+
 const deleteLead = async (req, res, next) => {
     try {
         const lead = await Lead.findById(req.params.id);
@@ -72,9 +85,76 @@ const deleteLead = async (req, res, next) => {
     }
 };
 
+const getLeadDetails = async (req, res, next) => {
+    try {
+        const lead = await Lead.findById(req.params.id).populate('assignedEmployee', 'name email role');
+        if (!lead) return res.status(404).json({ message: 'Lead not found' });
+
+        const Note = require('../models/Note');
+        const Followup = require('../models/Followup');
+
+        const notes = await Note.find({ lead: lead._id }).populate('createdBy', 'name role').sort({ createdAt: -1 });
+        const followups = await Followup.find({ lead: lead._id }).sort({ followupDate: 1 });
+
+        res.json({ lead, notes, followups });
+    } catch (error) {
+        next(error);
+    }
+};
+
+const addNote = async (req, res, next) => {
+    try {
+        const Note = require('../models/Note');
+        const newNote = new Note({
+            lead: req.params.id,
+            note: req.body.note,
+            createdBy: req.body.userId // Assuming passed in body by UI decoding token, or from JWT middleware.
+        });
+        await newNote.save();
+        res.status(201).json({ message: 'Note added successfully', note: newNote });
+    } catch (error) {
+        next(error);
+    }
+};
+
+const addFollowup = async (req, res, next) => {
+    try {
+        const Followup = require('../models/Followup');
+        const { followupDate, remarks, nextFollowupDate } = req.body;
+        const newFollowup = new Followup({
+            lead: req.params.id,
+            followupDate,
+            remarks,
+            nextFollowupDate
+        });
+        await newFollowup.save();
+        res.status(201).json({ message: 'Followup scheduled successfully', followup: newFollowup });
+    } catch (error) {
+        next(error);
+    }
+};
+
+const markFollowupCompleted = async (req, res, next) => {
+    try {
+        const Followup = require('../models/Followup');
+        const followup = await Followup.findById(req.params.followupId);
+        if (!followup) return res.status(404).json({ message: 'Not found' });
+        followup.status = 'Completed';
+        await followup.save();
+        res.json({ message: 'Followup completed', followup });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     getLeads,
     createLead,
+    updateLead,
     updateLeadStatus,
-    deleteLead
+    deleteLead,
+    getLeadDetails,
+    addNote,
+    addFollowup,
+    markFollowupCompleted
 };

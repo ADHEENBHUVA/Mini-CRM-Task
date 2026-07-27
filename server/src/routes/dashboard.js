@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const dashboardController = require('../controllers/dashboardController');
-const { protect } = require('../middleware/errorHandler'); // using the existing JWT protect if available
+const { protect } = require('../middleware/authMiddleware');
 
-router.get('/stats', dashboardController.getDashboardStats);
+router.get('/stats', protect, dashboardController.getDashboardStats);
 
 module.exports = router;

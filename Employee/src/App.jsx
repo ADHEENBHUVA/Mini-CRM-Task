@@ -12,11 +12,7 @@ import Profile from './pages/Profile';
 import EmployeeDetails from './pages/Employee/EmployeeDetails';
 import Followups from './pages/Followups';
 
-function AdminRoute({ children }) {
-    const user = JSON.parse(localStorage.getItem('user')) || {};
-    const isAdmin = user.role === 'Master Admin' || user.role === 'Superadmin' || user.role === 'Admin';
-    return isAdmin ? children : <Navigate to="/" />;
-}
+// Admin features have been stripped out from the Employee Portal
 
 function App() {
     return (
@@ -34,11 +30,7 @@ function App() {
 
                 {/* Protected Routes inside DashboardLayout */}
                 <Route path="/" element={<DashboardLayout />}>
-                    <Route index element={<Dashboard />} />
-                    <Route path="employees" element={<AdminRoute><Employees /></AdminRoute>} />
-                    <Route path="employees/new" element={<AdminRoute><EmployeeForm /></AdminRoute>} />
-                    <Route path="employees/:id" element={<AdminRoute><EmployeeDetails /></AdminRoute>} />
-                    <Route path="employees/:id/edit" element={<AdminRoute><EmployeeForm /></AdminRoute>} />
+                    <Route index element={<Navigate to="/leads" replace />} />
                     <Route path="leads" element={<LeadsList />} />
                     <Route path="leads/new" element={<LeadForm />} />
                     <Route path="leads/:id" element={<LeadDetails />} />

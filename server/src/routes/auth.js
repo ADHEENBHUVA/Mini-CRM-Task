@@ -14,7 +14,7 @@ router.post('/login', async (req, res) => {
         // --- MOCK OVERRIDE for quick demo access ---
         const safeEmail = email ? email.toLowerCase().trim() : '';
         if (safeEmail === 'admin@nextbuy.com' || safeEmail === 'admin@minicrm.com' || safeEmail === 'admin') {
-            const token = jwt.sign({ id: 'mockadmin123', email: safeEmail }, 'secret_key_minicrm_jwt', { expiresIn: '1d' });
+            const token = jwt.sign({ id: 'mockadmin123', email: safeEmail, role: 'Admin' }, JWT_SECRET, { expiresIn: '1d' });
             return res.json({
                 message: 'Login successful',
                 token,
@@ -23,8 +23,17 @@ router.post('/login', async (req, res) => {
         }
         // -------------------------------------------
 
-        // 1. Check if user exists
-        const user = await User.findOne({ email });
+        // 1. Check if user exists in Admins collection
+        let user = await User.findOne({ email });
+        let isEmployee = false;
+
+        // 1.5 If not an Admin, check the Employee collection
+        if (!user) {
+            const Employee = require('../models/Employee');
+            user = await Employee.findOne({ email });
+            isEmployee = true;
+        }
+
         if (!user) {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
@@ -36,12 +45,15 @@ router.post('/login', async (req, res) => {
         }
 
         // 3. Create and assign JWT token
-        const token = jwt.sign({ id: user._id, email: user.email }, JWT_SECRET, { expiresIn: '1d' });
+        const role = isEmployee ? user.role : 'Admin';
+        const name = user.name || (isEmployee ? 'Employee' : 'Admin');
+
+        const token = jwt.sign({ id: user._id, email: user.email, role }, JWT_SECRET, { expiresIn: '1d' });
 
         res.json({
             message: 'Login successful',
             token,
-            user: { id: user._id, email: user.email }
+            user: { id: user._id, email: user.email, name, role }
         });
     } catch (error) {
         console.error('Error during login:', error);

@@ -3,14 +3,19 @@ const Followup = require('../models/Followup');
 
 exports.getDashboardStats = async (req, res) => {
     try {
+        let leadQuery = {};
+        if (req.user && req.user.role !== 'Admin') {
+            leadQuery = { assignedEmployee: req.user.id };
+        }
+
         // Count total leads
-        const totalLeads = await Lead.countDocuments();
+        const totalLeads = await Lead.countDocuments(leadQuery);
 
         // Count Won deals
-        const wonDeals = await Lead.countDocuments({ status: 'Won' });
+        const wonDeals = await Lead.countDocuments({ ...leadQuery, status: 'Won' });
 
         // Count Pending (Anything not won/lost)
-        const pendingLeads = await Lead.countDocuments({ status: { $nin: ['Won', 'Lost'] } });
+        const pendingLeads = await Lead.countDocuments({ ...leadQuery, status: { $nin: ['Won', 'Lost'] } });
 
         // Today's Follow-ups
         const today = new Date();
@@ -18,20 +23,29 @@ exports.getDashboardStats = async (req, res) => {
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
 
-        const todaysFollowups = await Followup.countDocuments({
+        let followupQuery = {
             followupDate: {
                 $gte: today,
                 $lt: tomorrow
             },
             status: 'Pending'
-        });
+        };
+
+        if (req.user && req.user.role !== 'Admin') {
+            const employeeLeads = await Lead.find({ assignedEmployee: req.user.id }).select('_id');
+            const leadIds = employeeLeads.map(l => l._id);
+            followupQuery.lead = { $in: leadIds };
+        }
+
+        const todaysFollowups = await Followup.countDocuments(followupQuery);
 
         // Lead Status Chart Data (Aggregate)
         const statusDistribution = await Lead.aggregate([
+            { $match: leadQuery },
             { $group: { _id: '$status', count: { $sum: 1 } } }
         ]);
 
-        const formattedStatusData = statusDistribution.map(stat => ({
+        let formattedStatusData = statusDistribution.map(stat => ({
             name: stat._id,
             value: stat.count
         }));
@@ -53,7 +67,7 @@ exports.getDashboardStats = async (req, res) => {
         sixMonthsAgo.setDate(1); // Calculate strictly from the first day of the oldest month
 
         const monthlyAggregation = await Lead.aggregate([
-            { $match: { createdAt: { $gte: sixMonthsAgo } } },
+            { $match: { ...leadQuery, createdAt: { $gte: sixMonthsAgo } } },
             {
                 $group: {
                     _id: { $month: "$createdAt" },

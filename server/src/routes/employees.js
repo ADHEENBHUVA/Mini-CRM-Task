@@ -22,14 +22,18 @@ const validate = (req, res, next) => {
 router.get('/', getEmployees);
 router.get('/:id', getEmployeeById);
 
-router.post('/', [
+const employeeValidationRules = [
     body('name').notEmpty().withMessage('Name is required'),
     body('email').isEmail().withMessage('Valid email is required'),
-    body('phone').notEmpty().withMessage('Phone is required'),
-    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
-], validate, createEmployee);
+    body('phone').matches(/^\d{10}$/).withMessage('Phone must be exactly 10 numeric digits.'),
+    body('password').optional().isLength({ min: 8, max: 16 }).withMessage('Password must be between 8-16 characters')
+        .matches(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
+        .withMessage('Password must contain uppercase, lowercase, number, and special character.')
+];
 
-router.put('/:id', updateEmployee);
+router.post('/', employeeValidationRules, validate, createEmployee);
+
+router.put('/:id', employeeValidationRules, validate, updateEmployee);
 router.delete('/:id', deleteEmployee);
 
 module.exports = router;

@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #f8fafc;
+  
+  /* Prevents text-selection tools and I-beam cursors from showing on random words */
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: default;
+}
+
+/* Ensure inputs still have the normal typing cursor */
+input, textarea {
+  user-select: auto;
+  -webkit-user-select: auto;
+  cursor: text;
+}

@@ -3,12 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { Home, Users, Briefcase, CalendarClock, User, LogOut, X } from 'lucide-react';
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
-    const user = JSON.parse(localStorage.getItem('user')) || {};
-    const isAdmin = user.role === 'Master Admin' || user.role === 'Superadmin' || user.role === 'Admin';
-
     const navItems = [
-        { label: 'Dashboard', icon: Home, path: '/' },
-        ...(isAdmin ? [{ label: 'Employees', icon: Users, path: '/employees' }] : []),
         { label: 'Leads', icon: Briefcase, path: '/leads' },
         { label: 'Followups', icon: CalendarClock, path: '/followups' },
         { label: 'Profile', icon: User, path: '/profile' },

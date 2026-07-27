@@ -1,4 +1,5 @@
 const Employee = require('../models/Employee');
+const Lead = require('../models/Lead');
 const bcrypt = require('bcrypt');
 
 const getEmployees = async (req, res, next) => {
@@ -16,7 +17,18 @@ const getEmployeeById = async (req, res, next) => {
         if (!employee) {
             return res.status(404).json({ message: 'Employee not found' });
         }
-        res.json(employee);
+
+        const leads = await Lead.find({ assignedEmployee: employee._id }).sort({ createdAt: -1 });
+        const total = leads.length;
+        const won = leads.filter(l => l.status === 'Won').length;
+        const lost = leads.filter(l => l.status === 'Lost').length;
+        const active = leads.filter(l => !['Won', 'Lost'].includes(l.status)).length;
+
+        res.json({
+            employee,
+            stats: { total, won, lost, active },
+            leads
+        });
     } catch (error) {
         next(error);
     }
@@ -24,7 +36,7 @@ const getEmployeeById = async (req, res, next) => {
 
 const createEmployee = async (req, res, next) => {
     try {
-        const { name, email, phone, role, password, status } = req.body;
+        const { name, email, phone, role, department, password, status } = req.body;
 
         const exists = await Employee.findOne({ email });
         if (exists) {
@@ -33,7 +45,7 @@ const createEmployee = async (req, res, next) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
         const employee = new Employee({
-            name, email, phone, role, password: hashedPassword, status
+            name, email, phone, role, department, password: hashedPassword, status
         });
 
         await employee.save();
@@ -45,10 +57,17 @@ const createEmployee = async (req, res, next) => {
 
 const updateEmployee = async (req, res, next) => {
     try {
-        const { name, phone, role, status } = req.body;
+        const { name, email, phone, role, department, status, password } = req.body;
+
+        let updateFields = { name, email, phone, role, department, status };
+
+        if (password && password.trim() !== '') {
+            updateFields.password = await bcrypt.hash(password, 10);
+        }
+
         const employee = await Employee.findByIdAndUpdate(
             req.params.id,
-            { name, phone, role, status },
+            updateFields,
             { new: true }
         ).select('-password');
 

@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, Briefcase, User, Mail, Phone, Building, Users } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
 const LeadForm = () => {
     const navigate = useNavigate();
-    const { id } = useParams();
-    const isEditMode = Boolean(id);
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -36,38 +34,7 @@ const LeadForm = () => {
             }
         };
         fetchEmployees();
-
-        if (isEditMode) {
-            const fetchLead = async () => {
-                setLoading(true);
-                try {
-                    const token = localStorage.getItem('token');
-                    const res = await axios.get(`http://localhost:5000/api/leads/${id}`, {
-                        headers: { Authorization: `Bearer ${token}` }
-                    });
-                    const lead = res.data.lead;
-                    setFormData({
-                        name: lead.contactPerson || '',
-                        email: lead.email || '',
-                        phone: lead.phone || '',
-                        company: lead.companyName || '',
-                        source: lead.leadSource || 'Website',
-                        status: lead.status || 'New',
-                        expectedBudget: lead.expectedBudget || '',
-                        assignedEmployee: lead.assignedEmployee ? (lead.assignedEmployee._id || lead.assignedEmployee) : ''
-                    });
-                    if (lead.assignedEmployee && lead.assignedEmployee.name) {
-                        setEmpSearch(lead.assignedEmployee.name);
-                    }
-                } catch (error) {
-                    toast.error('Failed to load lead details');
-                } finally {
-                    setLoading(false);
-                }
-            };
-            fetchLead();
-        }
-    }, [id, isEditMode]);
+    }, []);
 
     const handleChange = (e) => {
         let value = e.target.value;
@@ -82,7 +49,7 @@ const LeadForm = () => {
         setLoading(true);
         try {
             const token = localStorage.getItem('token');
-            const data = {
+            await axios.post('http://localhost:5000/api/leads', {
                 contactPerson: formData.name,
                 email: formData.email,
                 phone: formData.phone,
@@ -91,19 +58,10 @@ const LeadForm = () => {
                 status: formData.status,
                 assignedEmployee: formData.assignedEmployee || undefined,
                 expectedBudget: Number(formData.expectedBudget) || 1000
-            };
-
-            if (isEditMode) {
-                await axios.put(`http://localhost:5000/api/leads/${id}`, data, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                toast.success('Lead updated securely!');
-            } else {
-                await axios.post('http://localhost:5000/api/leads', data, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                toast.success('Lead created safely!');
-            }
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            toast.success('Lead created safely!');
             navigate('/leads');
         } catch (error) {
             console.error('Error creating lead', error);
@@ -125,8 +83,8 @@ const LeadForm = () => {
                         <ArrowLeft className="w-5 h-5" />
                     </button>
                     <div>
-                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{isEditMode ? 'Edit Lead Details' : 'Create New Lead'}</h2>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">{isEditMode ? 'Update existing lead lifecycle parameters.' : 'Fill in the details below to add a prospective client.'}</p>
+                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Create New Lead</h2>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">Fill in the details below to add a prospective client.</p>
                     </div>
                 </div>
             </div>
