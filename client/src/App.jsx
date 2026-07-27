@@ -1,21 +1,25 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-
-function Home() {
-    return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-50">
-            <div className="text-center">
-                <h1 className="text-4xl font-bold text-blue-600 mb-4">Mini CRM system</h1>
-                <p className="text-gray-600">Frontend and Backend boilerplates initialized manually!</p>
-            </div>
-        </div>
-    );
-}
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Login from './pages/Login';
+import DashboardLayout from './layouts/DashboardLayout';
+import Dashboard from './pages/Dashboard';
+import Employees from './pages/Employees';
 
 function App() {
     return (
         <Router>
             <Routes>
-                <Route path="/" element={<Home />} />
+                <Route path="/login" element={<Login />} />
+
+                {/* Protected Routes inside DashboardLayout */}
+                <Route path="/" element={<DashboardLayout />}>
+                    <Route index element={<Dashboard />} />
+                    <Route path="employees" element={<Employees />} />
+                    <Route path="leads" element={<div className="font-bold text-2xl">Leads Work In Progress</div>} />
+                    <Route path="followups" element={<div className="font-bold text-2xl">Followups Work In Progress</div>} />
+                    <Route path="profile" element={<div className="font-bold text-2xl">Profile Work In Progress</div>} />
+                </Route>
+
+                <Route path="*" element={<Navigate to="/" />} />
             </Routes>
         </Router>
     );
