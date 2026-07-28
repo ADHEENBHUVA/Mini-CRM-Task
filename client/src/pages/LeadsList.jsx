@@ -1,15 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Link, useNavigate } from 'react-router-dom';
-import { Briefcase, Search, Plus, ExternalLink, User, Eye, Edit2, Trash2 } from 'lucide-react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Briefcase, Search, Plus, ExternalLink, User, Eye, Edit2, Trash2, RefreshCcw } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { confirmAction } from '../utils/confirmAction';
 
 const LeadsList = () => {
     const [leads, setLeads] = useState([]);
     const [loading, setLoading] = useState(true);
     const [employees, setEmployees] = useState([]);
     const [selectedEmployee, setSelectedEmployee] = useState('');
+    const [viewMode, setViewMode] = useState('Active');
     const navigate = useNavigate();
+    const location = useLocation();
+
+    useEffect(() => {
+        const queryParams = new URLSearchParams(location.search);
+        if (queryParams.get('view') === 'deleted') {
+            setViewMode('Deleted');
+        } else {
+            setViewMode('Active');
+        }
+    }, [location.search]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -18,7 +30,7 @@ const LeadsList = () => {
                 const token = localStorage.getItem('token');
                 // Fetch both leads and employees simultaneously
                 const [resLeads, resEmp] = await Promise.all([
-                    axios.get('http://localhost:5000/api/leads', { headers: { Authorization: `Bearer ${token}` } }),
+                    axios.get(`http://localhost:5000/api/leads?viewDeleted=${viewMode === 'Deleted'}`, { headers: { Authorization: `Bearer ${token}` } }),
                     axios.get('http://localhost:5000/api/employees', { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] }))
                 ]);
 
@@ -31,19 +43,35 @@ const LeadsList = () => {
             }
         };
         fetchData();
-    }, []);
+    }, [viewMode]);
 
-    const handleDelete = async (id) => {
-        if (!window.confirm('Are you absolutely sure you want to delete this lead?')) return;
+    const handleDelete = async (id, permanent = false) => {
+        const confirmed = await confirmAction(`Are you absolutely sure you want to ${permanent ? 'permanently ' : ''}delete this lead?`);
+        if (!confirmed) return;
         try {
             const token = localStorage.getItem('token');
-            await axios.delete(`http://localhost:5000/api/leads/${id}`, {
+            await axios.delete(`http://localhost:5000/api/leads/${id}${permanent ? '?permanent=true' : ''}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setLeads(leads.filter(lead => lead._id !== id));
-            toast.success('Lead permanently deleted');
+            toast.success(permanent ? 'Lead permanently deleted' : 'Lead deleted');
         } catch (error) {
             toast.error('Failed to delete lead');
+        }
+    };
+
+    const handleRestore = async (id) => {
+        const confirmed = await confirmAction('Are you absolutely sure you want to restore this lead?');
+        if (!confirmed) return;
+        try {
+            const token = localStorage.getItem('token');
+            await axios.put(`http://localhost:5000/api/leads/${id}/restore`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setLeads(leads.filter(lead => lead._id !== id));
+            toast.success('Lead restored');
+        } catch (error) {
+            toast.error('Failed to restore lead');
         }
     };
 
@@ -69,7 +97,16 @@ const LeadsList = () => {
             </div>
 
             {/* Filter Bar */}
-            <div className="bg-white dark:bg-[#0F172A] border border-slate-200 dark:border-[#1E293B] shadow-sm rounded-3xl p-4 sm:px-6 flex items-center transition-colors">
+            <div className="bg-white dark:bg-[#0F172A] border border-slate-200 dark:border-[#1E293B] shadow-sm rounded-3xl p-4 sm:px-6 flex flex-col sm:flex-row items-center gap-4 transition-colors">
+                <select
+                    value={viewMode}
+                    onChange={(e) => setViewMode(e.target.value)}
+                    className="w-full sm:w-48 bg-slate-50 dark:bg-[#1E293B] border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
+                >
+                    <option value="Active">Active Leads</option>
+                    <option value="Deleted">Deleted Leads</option>
+                </select>
+
                 <div className="flex items-center gap-3 w-full max-w-sm ring-1 ring-slate-200 dark:ring-slate-700/50 rounded-xl px-4 py-1.5 focus-within:ring-2 focus-within:ring-indigo-500/50 bg-slate-50 dark:bg-[#0F1523] transition-all">
                     <User className="w-5 h-5 text-slate-400 shrink-0" />
                     <select
@@ -122,15 +159,28 @@ const LeadsList = () => {
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <div className="flex items-center justify-end gap-1.5 sm:gap-2">
-                                                <Link to={`/leads/${lead._id}`} onClick={(e) => e.stopPropagation()} className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-lg transition-all" title="View Details">
-                                                    <Eye className="w-[18px] h-[18px]" strokeWidth={2.2} />
-                                                </Link>
-                                                <Link to={`/leads/${lead._id}/edit`} onClick={(e) => e.stopPropagation()} className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 rounded-lg transition-all" title="Edit">
-                                                    <Edit2 className="w-[18px] h-[18px]" strokeWidth={2.2} />
-                                                </Link>
-                                                <button onClick={(e) => { e.stopPropagation(); handleDelete(lead._id); }} className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-all" title="Delete">
-                                                    <Trash2 className="w-[18px] h-[18px]" strokeWidth={2.2} />
-                                                </button>
+                                                {viewMode === 'Active' ? (
+                                                    <>
+                                                        <Link to={`/leads/${lead._id}`} onClick={(e) => e.stopPropagation()} className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-lg transition-all" title="View Details">
+                                                            <Eye className="w-[18px] h-[18px]" strokeWidth={2.2} />
+                                                        </Link>
+                                                        <Link to={`/leads/${lead._id}/edit`} onClick={(e) => e.stopPropagation()} className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 rounded-lg transition-all" title="Edit">
+                                                            <Edit2 className="w-[18px] h-[18px]" strokeWidth={2.2} />
+                                                        </Link>
+                                                        <button onClick={(e) => { e.stopPropagation(); handleDelete(lead._id); }} className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-all" title="Delete">
+                                                            <Trash2 className="w-[18px] h-[18px]" strokeWidth={2.2} />
+                                                        </button>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <button onClick={(e) => { e.stopPropagation(); handleRestore(lead._id); }} className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-lg transition-all" title="Restore">
+                                                            <RefreshCcw className="w-[18px] h-[18px]" strokeWidth={2.2} />
+                                                        </button>
+                                                        <button onClick={(e) => { e.stopPropagation(); handleDelete(lead._id, true); }} className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-all" title="Delete Permanently">
+                                                            <Trash2 className="w-[18px] h-[18px]" strokeWidth={2.2} />
+                                                        </button>
+                                                    </>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>

@@ -1,8 +1,9 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
-import { Home, Users, Briefcase, CalendarClock, User, LogOut, X } from 'lucide-react';
+import { NavLink, useLocation } from 'react-router-dom';
+import { Home, Users, Briefcase, CalendarClock, User, LogOut, X, Trash2 } from 'lucide-react';
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
+    const location = useLocation();
     const user = JSON.parse(localStorage.getItem('user')) || {};
     const isAdmin = user.role === 'Master Admin' || user.role === 'Superadmin' || user.role === 'Admin';
 
@@ -12,6 +13,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         { label: 'Leads', icon: Briefcase, path: '/leads' },
         { label: 'Followups', icon: CalendarClock, path: '/followups' },
         { label: 'Profile', icon: User, path: '/profile' },
+        { label: 'Deleted Leads', icon: Trash2, path: '/leads?view=deleted' },
     ];
 
     return (
@@ -43,22 +45,32 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                         key={item.label}
                         to={item.path}
                         onClick={() => setIsOpen(false)}
-                        className={({ isActive }) =>
-                            `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 relative group overflow-hidden ${isActive
-                                ? 'bg-indigo-50 dark:bg-[#1E293B] text-indigo-700 dark:text-white shadow-sm dark:shadow-none border border-indigo-200 dark:border-slate-700/50'
+                        className={({ isActive }) => {
+                            const searchPart = item.path.includes('?') ? '?' + item.path.split('?')[1] : '';
+                            const searchMatch = location.search === searchPart;
+                            const trulyActive = isActive && searchMatch;
+
+                            return `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 relative group overflow-hidden ${trulyActive
+                                ? 'text-indigo-700 dark:text-indigo-400 font-semibold'
                                 : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-[#151D2C] hover:text-slate-900 dark:hover:text-white'
-                            }`
-                        }
+                                }`;
+                        }}
                     >
-                        {({ isActive }) => (
-                            <>
-                                {isActive && (
-                                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 rounded-full shadow-[0_0_10px_rgba(99,102,241,0.8)]"></div>
-                                )}
-                                <item.icon className={`w-5 h-5 transition-transform duration-300 ${isActive ? 'text-indigo-500 dark:text-indigo-400' : 'group-hover:scale-110 group-hover:text-indigo-500 dark:group-hover:text-indigo-400'}`} />
-                                <span className="font-medium tracking-wide">{item.label}</span>
-                            </>
-                        )}
+                        {({ isActive }) => {
+                            const searchPart = item.path.includes('?') ? '?' + item.path.split('?')[1] : '';
+                            const searchMatch = location.search === searchPart;
+                            const trulyActive = isActive && searchMatch;
+
+                            return (
+                                <>
+                                    {trulyActive && (
+                                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 rounded-full shadow-[0_0_10px_rgba(99,102,241,0.8)]"></div>
+                                    )}
+                                    <item.icon className={`w-5 h-5 transition-transform duration-300 ${trulyActive ? 'text-indigo-500 dark:text-indigo-400' : 'group-hover:scale-110 group-hover:text-indigo-500 dark:group-hover:text-indigo-400'}`} />
+                                    <span className="font-medium tracking-wide">{item.label}</span>
+                                </>
+                            );
+                        }}
                     </NavLink>
                 ))}
             </nav>

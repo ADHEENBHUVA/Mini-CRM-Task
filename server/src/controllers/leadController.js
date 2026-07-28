@@ -2,7 +2,12 @@ const Lead = require('../models/Lead');
 
 const getLeads = async (req, res, next) => {
     try {
-        const query = {};
+        let query = {};
+        if (req.query.viewDeleted === 'true') {
+            query.isDeleted = true;
+        } else {
+            query.isDeleted = { $ne: true };
+        }
 
         // If the logged in user is a Standard Employee, lock down the visibility scope
         if (req.user && (req.user.role === 'Employee' || req.user.role === 'Standard')) {
@@ -133,8 +138,27 @@ const deleteLead = async (req, res, next) => {
             return res.status(400).json({ message: 'Cannot delete a Won lead' });
         }
 
-        await lead.deleteOne();
+        if (req.query.permanent === 'true') {
+            await Lead.findByIdAndDelete(req.params.id);
+            return res.json({ message: 'Lead permanently deleted' });
+        }
+
+        lead.isDeleted = true;
+        await lead.save();
         res.json({ message: 'Lead deleted successfully' });
+    } catch (error) {
+        next(error);
+    }
+};
+
+const restoreLead = async (req, res, next) => {
+    try {
+        const lead = await Lead.findById(req.params.id);
+        if (!lead) return res.status(404).json({ message: 'Lead not found' });
+
+        lead.isDeleted = false;
+        await lead.save();
+        res.json({ message: 'Lead restored successfully' });
     } catch (error) {
         next(error);
     }
@@ -153,11 +177,13 @@ const getLeadDetails = async (req, res, next) => {
 
         const Note = require('../models/Note');
         const Followup = require('../models/Followup');
+        const Comment = require('../models/Comment');
 
         const notes = await Note.find({ lead: lead._id }).populate('createdBy', 'name role').sort({ createdAt: 1 });
         const followups = await Followup.find({ lead: lead._id }).sort({ followupDate: 1 });
+        const winLossComment = await Comment.findOne({ lead: lead._id, type: 'Win/Loss Reason' }).sort({ createdAt: -1 });
 
-        res.json({ lead, notes, followups });
+        res.json({ lead, notes, followups, winLossComment });
     } catch (error) {
         next(error);
     }
@@ -241,6 +267,7 @@ module.exports = {
     updateLead,
     updateLeadStatus,
     deleteLead,
+    restoreLead,
     getLeadDetails,
     addNote,
     addFollowup,

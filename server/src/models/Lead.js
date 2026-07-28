@@ -22,7 +22,8 @@ const LeadSchema = new mongoose.Schema({
     },
     nextFollowupDate: { type: Date },
     assignedEmployee: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee' },
-    description: { type: String }
+    description: { type: String },
+    isDeleted: { type: Boolean, default: false }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Lead', LeadSchema);

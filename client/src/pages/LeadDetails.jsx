@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ArrowLeft, Clock, MessageSquare, Calendar, Building, User, Mail, Phone, CheckCircle, ChevronRight, Hash } from 'lucide-react';
+import { ArrowLeft, Clock, MessageSquare, Calendar, Building, User, Mail, Phone, CheckCircle, ChevronRight, Hash, Award, ThumbsDown } from 'lucide-react';
 
 const LeadDetails = () => {
     const { id } = useParams();
@@ -10,6 +10,7 @@ const LeadDetails = () => {
     const [lead, setLead] = useState(null);
     const [notes, setNotes] = useState([]);
     const [followups, setFollowups] = useState([]);
+    const [winLossComment, setWinLossComment] = useState(null);
     const [loading, setLoading] = useState(true);
 
     const [noteInput, setNoteInput] = useState('');
@@ -44,6 +45,7 @@ const LeadDetails = () => {
             setLead(res.data.lead);
             setNotes(res.data.notes);
             setFollowups(res.data.followups);
+            setWinLossComment(res.data.winLossComment);
 
             // Set default employee to assigned one
             if (res.data.lead.assignedEmployee) {
@@ -159,6 +161,16 @@ const LeadDetails = () => {
                     <p className="font-bold text-indigo-600 dark:text-indigo-400">{lead.assignedEmployee?.name || 'Unassigned'}</p>
                 </div>
             </div>
+
+            {lead.result !== 'Pending' && winLossComment && (
+                <div className={`p-4 rounded-xl border ${lead.result === 'Lead Won' ? 'bg-emerald-50 border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/20 text-emerald-800 dark:text-emerald-300' : 'bg-rose-50 border-rose-200 dark:bg-rose-500/10 dark:border-rose-500/20 text-rose-800 dark:text-rose-300'}`}>
+                    <h4 className="font-bold flex items-center gap-2 mb-1">
+                        {lead.result === 'Lead Won' ? <Award className="w-5 h-5" /> : <ThumbsDown className="w-5 h-5" />}
+                        {lead.result === 'Lead Won' ? 'Lead Won Remarks' : 'Lead Lost Reason'}
+                    </h4>
+                    <p className="text-sm font-medium">{winLossComment.text}</p>
+                </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 

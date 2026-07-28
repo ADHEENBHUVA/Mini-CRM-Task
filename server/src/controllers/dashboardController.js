@@ -6,11 +6,11 @@ const mongoose = require('mongoose');
 exports.getDashboardStats = async (req, res) => {
     try {
         const isAdmin = req.user && (req.user.role === 'Admin' || req.user.role === 'Master Admin' || req.user.role === 'Superadmin');
-        let leadQuery = {};
+        let leadQuery = { isDeleted: { $ne: true } };
         let followupQuery = {};
 
         if (!isAdmin) {
-            leadQuery = { assignedEmployee: new mongoose.Types.ObjectId(req.user.id) };
+            leadQuery = { isDeleted: { $ne: true }, assignedEmployee: new mongoose.Types.ObjectId(req.user.id) };
             followupQuery = { employee: new mongoose.Types.ObjectId(req.user.id) };
         }
 
@@ -66,8 +66,8 @@ exports.getDashboardStats = async (req, res) => {
         let inactiveEmployees = 0;
 
         if (isAdmin) {
-            activeEmployees = await Employee.countDocuments({ status: 'Active' });
-            inactiveEmployees = await Employee.countDocuments({ status: 'Inactive' });
+            activeEmployees = await Employee.countDocuments({ status: 'Active', isDeleted: { $ne: true } });
+            inactiveEmployees = await Employee.countDocuments({ status: 'Inactive', isDeleted: { $ne: true } });
         }
 
         const winRate = totalLeads > 0 ? ((wonDeals / totalLeads) * 100).toFixed(2) : 0;
@@ -76,13 +76,20 @@ exports.getDashboardStats = async (req, res) => {
 
         const statusDistribution = await Lead.aggregate([
             { $match: leadQuery },
-            { $group: { _id: '$status', count: { $sum: 1 } } }
+            { $group: { _id: '$result', count: { $sum: 1 } } }
         ]);
 
-        let formattedStatusData = statusDistribution.map(stat => ({
-            name: stat._id,
-            value: stat.count
-        }));
+        let formattedStatusData = statusDistribution.map(stat => {
+            let labelName = stat._id || 'Unknown';
+            if (labelName === 'Lead Won') labelName = 'Won Deal';
+            if (labelName === 'Lead Loss') labelName = 'Lost Deal';
+            if (labelName === 'Pending') labelName = 'Pending Deals';
+
+            return {
+                name: labelName,
+                value: stat.count
+            };
+        });
 
         // Fetch Monthly Data for the Bar Chart
         const sixMonthsAgo = new Date();
@@ -167,7 +174,7 @@ exports.getChartData = async (req, res) => {
         }
 
         const isAdmin = req.user && (req.user.role === 'Admin' || req.user.role === 'Master Admin');
-        let baseQuery = { ...dateQuery };
+        let baseQuery = { isDeleted: { $ne: true }, ...dateQuery };
         if (!isAdmin) {
             baseQuery.assignedEmployee = req.user.id;
         }

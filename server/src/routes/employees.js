@@ -8,7 +8,8 @@ const {
     getEmployeeById,
     createEmployee,
     updateEmployee,
-    deleteEmployee
+    deleteEmployee,
+    restoreEmployee
 } = require('../controllers/employeeController');
 
 // Simple validation middleware
@@ -36,5 +37,6 @@ router.post('/', protect, admin, employeeValidationRules, validate, createEmploy
 
 router.put('/:id', protect, restrictToSelfOrAdmin, employeeValidationRules, validate, updateEmployee);
 router.delete('/:id', protect, admin, deleteEmployee);
+router.put('/:id/restore', protect, admin, restoreEmployee);
 
 module.exports = router;

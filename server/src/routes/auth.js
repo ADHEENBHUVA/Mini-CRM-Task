@@ -47,6 +47,10 @@ router.post('/login', async (req, res) => {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
+        if (isEmployee && user.isDeleted) {
+            return res.status(403).json({ message: 'Account deactivated. Please contact administrator.' });
+        }
+
         // 2. Check password
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {

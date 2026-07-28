@@ -1,23 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import { UserPlus, Search, Edit2, Trash2, Mail, ShieldAlert, Eye } from 'lucide-react';
+import { UserPlus, Search, Edit2, Trash2, Mail, ShieldAlert, Eye, RefreshCcw } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { confirmAction } from '../../utils/confirmAction';
 
 const Employees = () => {
     const [employees, setEmployees] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [viewMode, setViewMode] = useState('Active'); // Active or Deleted
 
     useEffect(() => {
         fetchEmployees();
-    }, []);
+    }, [viewMode]);
 
     const fetchEmployees = async () => {
         setLoading(true);
         try {
             // Attempt to load from API
             const token = localStorage.getItem('token');
-            const res = await axios.get('http://localhost:5000/api/employees', {
+            const res = await axios.get(`http://localhost:5000/api/employees?viewDeleted=${viewMode === 'Deleted'}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setEmployees(res.data);
@@ -39,6 +42,36 @@ const Employees = () => {
         emp.email.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    const handleDelete = async (id) => {
+        const confirmed = await confirmAction('Are you sure you want to delete this employee?');
+        if (!confirmed) return;
+        try {
+            const token = localStorage.getItem('token');
+            await axios.delete(`http://localhost:5000/api/employees/${id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            toast.success('Employee deleted');
+            fetchEmployees();
+        } catch (error) {
+            toast.error('Failed to delete employee');
+        }
+    };
+
+    const handleRestore = async (id) => {
+        const confirmed = await confirmAction('Are you sure you want to restore this employee?');
+        if (!confirmed) return;
+        try {
+            const token = localStorage.getItem('token');
+            await axios.put(`http://localhost:5000/api/employees/${id}/restore`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            toast.success('Employee restored');
+            fetchEmployees();
+        } catch (error) {
+            toast.error('Failed to restore employee');
+        }
+    };
+
     return (
         <div className="flex flex-col gap-6 animate-in fade-in duration-500">
             {/* Header section */}
@@ -48,10 +81,21 @@ const Employees = () => {
                     <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 mt-1 sm:mt-2 font-medium">Manage corporate access and team roles.</p>
                 </div>
 
-                <Link to="/employees/new" className="mt-4 sm:mt-0 flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold transition-all duration-300 shadow-[0_4px_15px_rgba(79,70,229,0.3)] dark:shadow-[0_0_15px_rgba(79,70,229,0.4)] hover:-translate-y-0.5 w-full sm:w-auto justify-center">
-                    <UserPlus className="w-5 h-5" />
-                    <span>Add Employee</span>
-                </Link>
+                <div className="mt-4 sm:mt-0 flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+                    <select
+                        value={viewMode}
+                        onChange={(e) => setViewMode(e.target.value)}
+                        className="w-full sm:w-48 bg-slate-50 dark:bg-[#1E293B] border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
+                    >
+                        <option value="Active">Active Employees</option>
+                        <option value="Deleted">Deleted Employees</option>
+                    </select>
+
+                    <Link to="/employees/new" className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold transition-all duration-300 shadow-[0_4px_15px_rgba(79,70,229,0.3)] dark:shadow-[0_0_15px_rgba(79,70,229,0.4)] hover:-translate-y-0.5 w-full sm:w-auto justify-center">
+                        <UserPlus className="w-5 h-5" />
+                        <span>Add Employee</span>
+                    </Link>
+                </div>
             </div>
 
             {/* Table Container */}
@@ -131,12 +175,20 @@ const Employees = () => {
                                                 <Link to={`/employees/${emp._id}`} className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-lg transition-all" title="View Details">
                                                     <Eye className="w-[18px] h-[18px]" strokeWidth={2.2} />
                                                 </Link>
-                                                <Link to={`/employees/${emp._id}/edit`} className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 rounded-lg transition-all" title="Edit">
-                                                    <Edit2 className="w-[18px] h-[18px]" strokeWidth={2.2} />
-                                                </Link>
-                                                <button className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-all" title="Delete">
-                                                    <Trash2 className="w-[18px] h-[18px]" strokeWidth={2.2} />
-                                                </button>
+                                                {viewMode === 'Active' ? (
+                                                    <>
+                                                        <Link to={`/employees/${emp._id}/edit`} className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 rounded-lg transition-all" title="Edit">
+                                                            <Edit2 className="w-[18px] h-[18px]" strokeWidth={2.2} />
+                                                        </Link>
+                                                        <button onClick={() => handleDelete(emp._id)} className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-all" title="Delete">
+                                                            <Trash2 className="w-[18px] h-[18px]" strokeWidth={2.2} />
+                                                        </button>
+                                                    </>
+                                                ) : (
+                                                    <button onClick={() => handleRestore(emp._id)} className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-lg transition-all" title="Restore">
+                                                        <RefreshCcw className="w-[18px] h-[18px]" strokeWidth={2.2} />
+                                                    </button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>

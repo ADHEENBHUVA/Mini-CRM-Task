@@ -3,7 +3,7 @@ import axios from 'axios';
 import { jsPDF } from 'jspdf';
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { Link } from 'react-router-dom';
-import { Users, Briefcase, CalendarClock, TrendingUp, CheckCircle, Clock, ChevronDown, Download, FileText, FileSpreadsheet } from 'lucide-react';
+import { Users, Briefcase, CalendarClock, TrendingUp, CheckCircle, Clock, ChevronDown, Download, FileText, FileSpreadsheet, XCircle } from 'lucide-react';
 
 const COLORS = ['#818CF8', '#34D399', '#FBBF24', '#F472B6', '#A78BFA', '#38BDF8'];
 
@@ -179,7 +179,7 @@ const Dashboard = () => {
             </div>
 
             {/* KPI Cards */}
-            <div className={`grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 transition-opacity duration-300 ${loading ? 'opacity-50' : 'opacity-100'}`}>
+            <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 transition-opacity duration-300 ${loading ? 'opacity-50' : 'opacity-100'}`}>
 
                 {/* Total Leads */}
                 <div className="bg-white dark:bg-gradient-to-br dark:from-[#1E293B] dark:to-[#0F172A] p-6 rounded-3xl border border-slate-200 dark:border-[#334155] shadow-lg shadow-slate-200/50 dark:shadow-xl hover:shadow-indigo-500/10 dark:hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-300 group">
@@ -241,6 +241,21 @@ const Dashboard = () => {
                     </div>
                 </div>
 
+                {/* Lost Deals */}
+                <div className="bg-white dark:bg-gradient-to-br dark:from-[#1E293B] dark:to-[#0F172A] p-6 rounded-3xl border border-slate-200 dark:border-[#334155] shadow-lg shadow-slate-200/50 dark:shadow-xl hover:shadow-rose-500/10 dark:hover:shadow-rose-500/10 hover:-translate-y-1 transition-all duration-300 group">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p className="text-slate-500 dark:text-slate-400 font-semibold mb-1">Lost Deals</p>
+                            <h3 className="text-4xl font-bold text-slate-800 dark:text-white group-hover:text-rose-500 dark:group-hover:text-rose-400 transition-colors">
+                                {loading ? '...' : stats.lostDeals}
+                            </h3>
+                        </div>
+                        <div className="p-3 bg-rose-50 dark:bg-rose-500/10 rounded-2xl">
+                            <XCircle className="w-7 h-7 text-rose-500 dark:text-rose-400" />
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
             {/* Graphical Analytics */}
@@ -276,7 +291,10 @@ const Dashboard = () => {
                                         stroke="none"
                                     >
                                         {stats.statusData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                            <Cell
+                                                key={`cell-${index}`}
+                                                fill={entry.name === 'Lost Deal' ? '#F43F5E' : entry.name === 'Won Deal' ? '#10B981' : entry.name === 'Pending Deals' ? '#8B5CF6' : COLORS[index % COLORS.length]}
+                                            />
                                         ))}
                                     </Pie>
                                     <RechartsTooltip

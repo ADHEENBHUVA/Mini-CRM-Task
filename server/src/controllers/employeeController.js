@@ -4,7 +4,15 @@ const bcrypt = require('bcrypt');
 
 const getEmployees = async (req, res, next) => {
     try {
-        const employees = await Employee.find().select('-password');
+        const { viewDeleted } = req.query;
+        let query = {};
+        if (viewDeleted === 'true') {
+            query.isDeleted = true;
+        } else {
+            query.isDeleted = { $ne: true };
+        }
+
+        const employees = await Employee.find(query).select('-password');
         res.json(employees);
     } catch (error) {
         next(error);
@@ -107,11 +115,23 @@ const updateEmployee = async (req, res, next) => {
 
 const deleteEmployee = async (req, res, next) => {
     try {
-        const employee = await Employee.findByIdAndDelete(req.params.id);
+        const employee = await Employee.findByIdAndUpdate(req.params.id, { isDeleted: true }, { new: true });
         if (!employee) {
             return res.status(404).json({ message: 'Employee not found' });
         }
         res.json({ message: 'Employee removed successfully' });
+    } catch (error) {
+        next(error);
+    }
+};
+
+const restoreEmployee = async (req, res, next) => {
+    try {
+        const employee = await Employee.findByIdAndUpdate(req.params.id, { isDeleted: false }, { new: true });
+        if (!employee) {
+            return res.status(404).json({ message: 'Employee not found' });
+        }
+        res.json({ message: 'Employee restored successfully' });
     } catch (error) {
         next(error);
     }
@@ -122,5 +142,6 @@ module.exports = {
     getEmployeeById,
     createEmployee,
     updateEmployee,
-    deleteEmployee
+    deleteEmployee,
+    restoreEmployee
 };
