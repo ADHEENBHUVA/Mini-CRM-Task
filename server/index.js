@@ -16,6 +16,7 @@ const employeeRoutes = require('./src/routes/employees');
 const leadRoutes = require('./src/routes/leads');
 const dashboardRoutes = require('./src/routes/dashboard');
 const followupRoutes = require('./src/routes/followups');
+const reportRoutes = require('./src/routes/reports');
 const { errorHandler } = require('./src/middleware/errorHandler');
 
 app.use('/api/auth', authRoutes);
@@ -23,6 +24,7 @@ app.use('/api/employees', employeeRoutes);
 app.use('/api/leads', leadRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/followups', followupRoutes);
+app.use('/api/reports', reportRoutes);
 
 app.get('/', (req, res) => res.send('CRM API Running'));
 

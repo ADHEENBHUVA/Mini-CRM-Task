@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, Mail, ShieldAlert, Key, Save, ShieldCheck } from 'lucide-react';
+import { User, Mail, ShieldAlert, Key, Save, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const Profile = () => {
@@ -18,6 +18,10 @@ const Profile = () => {
     const [oldPassword, setOldPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+
+    const [showOldPassword, setShowOldPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const handleProfileUpdate = (e) => {
         e.preventDefault();
@@ -77,8 +81,8 @@ const Profile = () => {
                                     disabled={!isAdmin}
                                     onChange={(e) => setName(e.target.value)}
                                     className={`block w-full pl-11 pr-4 py-2.5 rounded-xl border transition-all ${!isAdmin
-                                            ? 'bg-slate-50 dark:bg-[#151D2C]/50 border-slate-200 dark:border-[#1E293B] text-slate-500 dark:text-slate-400 cursor-not-allowed shadow-none'
-                                            : 'bg-white dark:bg-[#0B0F19] border-slate-200 dark:border-[#1E293B] text-slate-900 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-sm'
+                                        ? 'bg-slate-50 dark:bg-[#151D2C]/50 border-slate-200 dark:border-[#1E293B] text-slate-500 dark:text-slate-400 cursor-not-allowed shadow-none'
+                                        : 'bg-white dark:bg-[#0B0F19] border-slate-200 dark:border-[#1E293B] text-slate-900 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-sm'
                                         }`}
                                     placeholder="Enter your name"
                                 />
@@ -152,13 +156,20 @@ const Profile = () => {
                                         <Key className="h-5 w-5 text-slate-400 dark:text-slate-500 group-focus-within:text-rose-500 transition-colors" />
                                     </div>
                                     <input
-                                        type="password"
+                                        type={showOldPassword ? "text" : "password"}
                                         required
                                         value={oldPassword}
                                         onChange={(e) => setOldPassword(e.target.value)}
-                                        className="block w-full pl-11 pr-4 py-2.5 bg-white dark:bg-[#0B0F19] border border-slate-200 dark:border-[#1E293B] rounded-xl text-slate-900 dark:text-slate-200 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-sm"
+                                        className="block w-full pl-11 pr-12 py-2.5 bg-white dark:bg-[#0B0F19] border border-slate-200 dark:border-[#1E293B] rounded-xl text-slate-900 dark:text-slate-200 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-sm"
                                         placeholder="Enter current password"
                                     />
+                                    <button
+                                        type="button"
+                                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 outline-none focus:outline-none"
+                                        onClick={() => setShowOldPassword(!showOldPassword)}
+                                    >
+                                        {showOldPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+                                    </button>
                                 </div>
                             </div>
 
@@ -169,13 +180,20 @@ const Profile = () => {
                                         <Key className="h-5 w-5 text-slate-400 dark:text-slate-500 group-focus-within:text-rose-500 transition-colors" />
                                     </div>
                                     <input
-                                        type="password"
+                                        type={showNewPassword ? "text" : "password"}
                                         required
                                         value={newPassword}
                                         onChange={(e) => setNewPassword(e.target.value)}
-                                        className="block w-full pl-11 pr-4 py-2.5 bg-white dark:bg-[#0B0F19] border border-slate-200 dark:border-[#1E293B] rounded-xl text-slate-900 dark:text-slate-200 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-sm"
+                                        className="block w-full pl-11 pr-12 py-2.5 bg-white dark:bg-[#0B0F19] border border-slate-200 dark:border-[#1E293B] rounded-xl text-slate-900 dark:text-slate-200 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-sm"
                                         placeholder="Enter new password"
                                     />
+                                    <button
+                                        type="button"
+                                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 outline-none focus:outline-none"
+                                        onClick={() => setShowNewPassword(!showNewPassword)}
+                                    >
+                                        {showNewPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+                                    </button>
                                 </div>
                             </div>
 
@@ -186,13 +204,20 @@ const Profile = () => {
                                         <Key className="h-5 w-5 text-slate-400 dark:text-slate-500 group-focus-within:text-rose-500 transition-colors" />
                                     </div>
                                     <input
-                                        type="password"
+                                        type={showConfirmPassword ? "text" : "password"}
                                         required
                                         value={confirmPassword}
                                         onChange={(e) => setConfirmPassword(e.target.value)}
-                                        className="block w-full pl-11 pr-4 py-2.5 bg-white dark:bg-[#0B0F19] border border-slate-200 dark:border-[#1E293B] rounded-xl text-slate-900 dark:text-slate-200 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-sm"
+                                        className="block w-full pl-11 pr-12 py-2.5 bg-white dark:bg-[#0B0F19] border border-slate-200 dark:border-[#1E293B] rounded-xl text-slate-900 dark:text-slate-200 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-sm"
                                         placeholder="Confirm new password"
                                     />
+                                    <button
+                                        type="button"
+                                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 outline-none focus:outline-none"
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    >
+                                        {showConfirmPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+                                    </button>
                                 </div>
                             </div>
                         </div>

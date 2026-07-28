@@ -42,6 +42,12 @@ const updateLeadStatus = async (req, res, next) => {
 
         if (!lead) return res.status(404).json({ message: 'Lead not found' });
 
+        if (req.user && req.user.role === 'Employee') {
+            if (!lead.assignedEmployee || lead.assignedEmployee.toString() !== req.user.id) {
+                return res.status(403).json({ message: 'Not authorized to modify this lead' });
+            }
+        }
+
         // Business logic validation for Won/Lost states
         if (lead.status === 'Won') {
             return res.status(400).json({ message: 'Cannot modify a Won lead' });
@@ -61,9 +67,17 @@ const updateLeadStatus = async (req, res, next) => {
 
 const updateLead = async (req, res, next) => {
     try {
-        const lead = await Lead.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const lead = await Lead.findById(req.params.id);
         if (!lead) return res.status(404).json({ message: 'Lead not found' });
-        res.json({ message: 'Lead updated completely', lead });
+
+        if (req.user && req.user.role === 'Employee') {
+            if (!lead.assignedEmployee || lead.assignedEmployee.toString() !== req.user.id) {
+                return res.status(403).json({ message: 'Not authorized to modify this lead' });
+            }
+        }
+
+        const updatedLead = await Lead.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        res.json({ message: 'Lead updated completely', lead: updatedLead });
     } catch (error) {
         next(error);
     }
@@ -90,6 +104,12 @@ const getLeadDetails = async (req, res, next) => {
         const lead = await Lead.findById(req.params.id).populate('assignedEmployee', 'name email role');
         if (!lead) return res.status(404).json({ message: 'Lead not found' });
 
+        if (req.user && req.user.role === 'Employee') {
+            if (!lead.assignedEmployee || lead.assignedEmployee._id.toString() !== req.user.id) {
+                return res.status(403).json({ message: 'Not authorized to access this lead' });
+            }
+        }
+
         const Note = require('../models/Note');
         const Followup = require('../models/Followup');
 
@@ -104,11 +124,20 @@ const getLeadDetails = async (req, res, next) => {
 
 const addNote = async (req, res, next) => {
     try {
+        const lead = await Lead.findById(req.params.id);
+        if (!lead) return res.status(404).json({ message: 'Lead not found' });
+
+        if (req.user && req.user.role === 'Employee') {
+            if (!lead.assignedEmployee || lead.assignedEmployee.toString() !== req.user.id) {
+                return res.status(403).json({ message: 'Not authorized to add notes' });
+            }
+        }
+
         const Note = require('../models/Note');
         const newNote = new Note({
             lead: req.params.id,
             note: req.body.note,
-            createdBy: req.body.userId // Assuming passed in body by UI decoding token, or from JWT middleware.
+            createdBy: req.user ? req.user.id : req.body.userId
         });
         await newNote.save();
         res.status(201).json({ message: 'Note added successfully', note: newNote });
@@ -119,11 +148,29 @@ const addNote = async (req, res, next) => {
 
 const addFollowup = async (req, res, next) => {
     try {
+        const lead = await Lead.findById(req.params.id);
+        if (!lead) return res.status(404).json({ message: 'Lead not found' });
+
+        if (req.user && req.user.role === 'Employee') {
+            if (!lead.assignedEmployee || lead.assignedEmployee.toString() !== req.user.id) {
+                return res.status(403).json({ message: 'Not authorized to add followups' });
+            }
+        }
+
         const Followup = require('../models/Followup');
-        const { followupDate, remarks, nextFollowupDate } = req.body;
+        const { followupDate, followupTime, customerResponse, remarks, nextFollowupDate, employeeId } = req.body;
+
+        let targetEmployee = req.user.id;
+        if (req.user.role === 'Admin' || req.user.role === 'Master Admin') {
+            targetEmployee = employeeId || lead.assignedEmployee;
+        }
+
         const newFollowup = new Followup({
             lead: req.params.id,
+            employee: targetEmployee,
             followupDate,
+            followupTime,
+            customerResponse,
             remarks,
             nextFollowupDate
         });

@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, UserPlus, Lock, Mail, Phone, Briefcase, Building } from 'lucide-react';
+import { ArrowLeft, UserPlus, Lock, Mail, Phone, Briefcase, Building, Eye, EyeOff } from 'lucide-react';
 
 const EmployeeForm = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [showPassword, setShowPassword] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -135,7 +136,14 @@ const EmployeeForm = () => {
                                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                     <Lock className="h-5 w-5 text-slate-400 dark:text-slate-500 group-focus-within:text-indigo-500 dark:group-focus-within:text-indigo-400 transition-colors" />
                                 </div>
-                                <input required type="password" name="password" value={formData.password} onChange={handleChange} minLength="8" maxLength="16" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,16}" title="Password must be 8-16 characters and contain at least one uppercase letter, one lowercase letter, one number, and one special character." placeholder="Uppercase, Lowercase, Number & Special Char" className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-slate-700/50 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-medium" />
+                                <input required type={showPassword ? "text" : "password"} name="password" value={formData.password} onChange={handleChange} minLength="8" maxLength="16" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,16}" title="Password must be 8-16 characters and contain at least one uppercase letter, one lowercase letter, one number, and one special character." placeholder="Uppercase, Lowercase, Number & Special Char" className="w-full pl-11 pr-12 py-3 bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-slate-700/50 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-medium" />
+                                <button
+                                    type="button"
+                                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 outline-none focus:outline-none"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                >
+                                    {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
+                                </button>
                             </div>
                         </div>
 

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { body, validationResult } = require('express-validator');
 const { getLeads, createLead, updateLead, updateLeadStatus, deleteLead, getLeadDetails, addNote, addFollowup, markFollowupCompleted } = require('../controllers/leadController');
+const { protect, admin } = require('../middleware/authMiddleware');
 
 const validate = (req, res, next) => {
     const errors = validationResult(req);
@@ -9,8 +10,8 @@ const validate = (req, res, next) => {
     next();
 };
 
-router.get('/', getLeads);
-router.post('/', [
+router.get('/', protect, getLeads);
+router.post('/', protect, admin, [
     body('companyName').notEmpty(),
     body('contactPerson').notEmpty(),
     body('phone').matches(/^\d{10}$/).withMessage('Phone must be 10 digits.'),
@@ -18,16 +19,16 @@ router.post('/', [
     body('expectedBudget').isNumeric()
 ], validate, createLead);
 
-router.patch('/:id/status', [
-    body('status').isIn(['New', 'Contacted', 'Qualified', 'Proposal Sent', 'Won', 'Lost'])
+router.patch('/:id/status', protect, [
+    body('status').isIn(['Pending', 'Interested', 'Not Interested', 'Callback', 'Follow-up Scheduled', 'Lead Done', 'Lead Not Done', 'Won', 'Lost'])
 ], validate, updateLeadStatus);
 
-router.put('/:id', updateLead);
-router.delete('/:id', deleteLead);
+router.put('/:id', protect, updateLead);
+router.delete('/:id', protect, admin, deleteLead);
 
-router.get('/:id', getLeadDetails);
-router.post('/:id/notes', addNote);
-router.post('/:id/followups', addFollowup);
-router.patch('/:id/followups/:followupId/completed', markFollowupCompleted);
+router.get('/:id', protect, getLeadDetails);
+router.post('/:id/notes', protect, addNote);
+router.post('/:id/followups', protect, addFollowup);
+router.patch('/:id/followups/:followupId/completed', protect, markFollowupCompleted);
 
 module.exports = router;

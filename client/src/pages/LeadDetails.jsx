@@ -16,6 +16,15 @@ const LeadDetails = () => {
     const [followupDate, setFollowupDate] = useState('');
     const [remarks, setRemarks] = useState('');
 
+    // Employee Assignment for Followups
+    const [employees, setEmployees] = useState([]);
+    const [empSearch, setEmpSearch] = useState('');
+    const [selectedEmployee, setSelectedEmployee] = useState('');
+    const [showEmpDropdown, setShowEmpDropdown] = useState(false);
+
+    const user = JSON.parse(localStorage.getItem('user')) || {};
+    const isAdmin = user.role === 'Admin' || user.role === 'Master Admin' || user.role === 'Superadmin';
+
     useEffect(() => {
         fetchLeadData();
     }, [id]);
@@ -29,12 +38,35 @@ const LeadDetails = () => {
             setLead(res.data.lead);
             setNotes(res.data.notes);
             setFollowups(res.data.followups);
+
+            // Set default employee to assigned one
+            if (res.data.lead.assignedEmployee) {
+                setSelectedEmployee(res.data.lead.assignedEmployee._id);
+                setEmpSearch(res.data.lead.assignedEmployee.name);
+            }
         } catch (error) {
             console.error('Failed to fetch lead details', error);
         } finally {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        if (isAdmin) {
+            const fetchEmployees = async () => {
+                try {
+                    const token = localStorage.getItem('token');
+                    const res = await axios.get('http://localhost:5000/api/employees', {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    setEmployees(res.data);
+                } catch (err) {
+                    console.error('Failed to fetch employees', err);
+                }
+            };
+            fetchEmployees();
+        }
+    }, [isAdmin]);
 
     const handleAddNote = async (e) => {
         e.preventDefault();
@@ -56,7 +88,12 @@ const LeadDetails = () => {
         if (!followupDate) return;
         try {
             const token = localStorage.getItem('token');
-            await axios.post(`http://localhost:5000/api/leads/${id}/followups`, { followupDate, remarks }, {
+            const payload = { followupDate, remarks };
+            if (isAdmin && selectedEmployee) {
+                payload.employeeId = selectedEmployee;
+            }
+
+            await axios.post(`http://localhost:5000/api/leads/${id}/followups`, payload, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setFollowupDate('');
@@ -126,12 +163,54 @@ const LeadDetails = () => {
                         <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2">
                             <Calendar className="w-5 h-5 text-indigo-500" /> Schedule Activity / Follow-up
                         </h3>
-                        <form onSubmit={handleAddFollowup} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="md:col-span-1">
+                        <form onSubmit={handleAddFollowup} className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                            <div className="md:col-span-3">
                                 <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 ml-1 uppercase">Date</label>
                                 <input required type="datetime-local" value={followupDate} onChange={(e) => setFollowupDate(e.target.value)} className="w-full px-4 py-3 bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-[#2A374C] rounded-xl text-slate-900 dark:text-white focus:ring-1 focus:ring-indigo-500 outline-none" />
                             </div>
-                            <div className="md:col-span-2">
+
+                            {isAdmin && (
+                                <div className="md:col-span-3 relative">
+                                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 ml-1 uppercase">Assign Employee</label>
+                                    <div className="relative group">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <User className="h-4 w-4 text-slate-400 group-focus-within:text-indigo-500" />
+                                        </div>
+                                        <input
+                                            type="text"
+                                            value={empSearch}
+                                            onChange={(e) => {
+                                                setEmpSearch(e.target.value);
+                                                if (selectedEmployee) setSelectedEmployee('');
+                                                setShowEmpDropdown(true);
+                                            }}
+                                            onFocus={() => setShowEmpDropdown(true)}
+                                            onBlur={() => setTimeout(() => setShowEmpDropdown(false), 200)}
+                                            className="w-full pl-9 pr-4 py-3 bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-[#2A374C] rounded-xl text-slate-900 dark:text-white focus:ring-1 focus:ring-indigo-500 outline-none transition-colors"
+                                            placeholder="Search Employee..."
+                                        />
+                                    </div>
+                                    {showEmpDropdown && (
+                                        <div className="absolute z-20 w-full mt-2 bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-[#2A374C] shadow-xl rounded-xl overflow-hidden max-h-48 overflow-y-auto">
+                                            {employees.filter(e => e.name.toLowerCase().includes(empSearch.toLowerCase())).map(emp => (
+                                                <div
+                                                    key={emp._id}
+                                                    className="px-4 py-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-[#151D2C] text-slate-700 dark:text-slate-300 font-medium flex justify-between text-sm"
+                                                    onClick={() => {
+                                                        setSelectedEmployee(emp._id);
+                                                        setEmpSearch(emp.name);
+                                                        setShowEmpDropdown(false);
+                                                    }}
+                                                >
+                                                    <span>{emp.name}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            <div className={isAdmin ? "md:col-span-6" : "md:col-span-9"}>
                                 <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 ml-1 uppercase">Objective / Remarks</label>
                                 <div className="flex gap-2">
                                     <input type="text" value={remarks} onChange={(e) => setRemarks(e.target.value)} placeholder="E.g. Call to discuss proposal..." className="flex-1 px-4 py-3 bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-[#2A374C] rounded-xl text-slate-900 dark:text-white focus:ring-1 focus:ring-indigo-500 outline-none" />

@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { protect, admin, restrictToSelfOrAdmin } = require('../middleware/authMiddleware');
 const { body, validationResult } = require('express-validator');
 
 const {
@@ -19,8 +20,8 @@ const validate = (req, res, next) => {
     next();
 };
 
-router.get('/', getEmployees);
-router.get('/:id', getEmployeeById);
+router.get('/', protect, admin, getEmployees);
+router.get('/:id', protect, restrictToSelfOrAdmin, getEmployeeById);
 
 const employeeValidationRules = [
     body('name').notEmpty().withMessage('Name is required'),
@@ -31,9 +32,9 @@ const employeeValidationRules = [
         .withMessage('Password must contain uppercase, lowercase, number, and special character.')
 ];
 
-router.post('/', employeeValidationRules, validate, createEmployee);
+router.post('/', protect, admin, employeeValidationRules, validate, createEmployee);
 
-router.put('/:id', employeeValidationRules, validate, updateEmployee);
-router.delete('/:id', deleteEmployee);
+router.put('/:id', protect, restrictToSelfOrAdmin, employeeValidationRules, validate, updateEmployee);
+router.delete('/:id', protect, admin, deleteEmployee);
 
 module.exports = router;

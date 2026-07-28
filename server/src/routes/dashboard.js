@@ -4,5 +4,6 @@ const dashboardController = require('../controllers/dashboardController');
 const { protect } = require('../middleware/authMiddleware');
 
 router.get('/stats', protect, dashboardController.getDashboardStats);
+router.get('/charts', protect, dashboardController.getChartData);
 
 module.exports = router;

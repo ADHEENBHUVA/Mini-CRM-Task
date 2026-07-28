@@ -4,16 +4,37 @@
 
 body {
   font-family: 'Inter', sans-serif;
-  background-color: #f8fafc;
-  
+  background: radial-gradient(circle at 15% 50%, rgba(30, 41, 59, 1), rgba(15, 23, 42, 1)), #0F172A;
+  background-attachment: fixed;
+  color: #e2e8f0;
+
   /* Prevents text-selection tools and I-beam cursors from showing on random words */
   user-select: none;
   -webkit-user-select: none;
   cursor: default;
 }
 
+@layer utilities {
+  .glass-card {
+    @apply bg-[#1e293b]/70 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl transition-all duration-300;
+  }
+
+  .glass-input {
+    @apply bg-slate-900/50 border border-slate-700 rounded-xl text-white outline-none focus:ring-2 focus:ring-indigo-500/50 backdrop-blur-sm transition-all;
+  }
+
+  .glass-hover {
+    @apply hover:bg-white/5 hover:border-white/20 transition-all duration-300;
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-cyan-400;
+  }
+}
+
 /* Ensure inputs still have the normal typing cursor */
-input, textarea {
+input,
+textarea {
   user-select: auto;
   -webkit-user-select: auto;
   cursor: text;

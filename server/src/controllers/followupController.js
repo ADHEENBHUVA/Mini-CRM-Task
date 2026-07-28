@@ -4,12 +4,15 @@ const Lead = require('../models/Lead');
 // Get all followups for the logged-in employee (or all for Admin)
 exports.getFollowups = async (req, res) => {
     try {
+        // Auto-update past pending followups to Due Follow-up
+        await Followup.updateMany(
+            { status: 'Pending', followupDate: { $lte: new Date() } },
+            { $set: { status: 'Due Follow-up' } }
+        );
+
         let query = {};
-        if (req.user.role !== 'Master Admin' && req.user.role !== 'Admin' && req.user.role !== 'Superadmin') {
-            // Find all leads assigned to this employee
-            const leads = await Lead.find({ assignedEmployee: req.user.id }).select('_id');
-            const leadIds = leads.map(l => l._id);
-            query = { lead: { $in: leadIds } };
+        if (req.user.role === 'Employee') {
+            query.employee = req.user.id;
         }
 
         const followups = await Followup.find(query).populate('lead', 'contactPerson companyName email phone').sort({ nextFollowupDate: 1 });
@@ -22,12 +25,16 @@ exports.getFollowups = async (req, res) => {
 // Check for "Due" followups when an employee logs in / dashboard mounts
 exports.getDueFollowupsCount = async (req, res) => {
     try {
-        let query = { status: 'Pending', followupDate: { $lte: new Date() } };
+        // Auto-update past pending followups to Due Follow-up
+        await Followup.updateMany(
+            { status: 'Pending', followupDate: { $lte: new Date() } },
+            { $set: { status: 'Due Follow-up' } }
+        );
 
-        if (req.user.role !== 'Master Admin' && req.user.role !== 'Admin' && req.user.role !== 'Superadmin') {
-            const leads = await Lead.find({ assignedEmployee: req.user.id }).select('_id');
-            const leadIds = leads.map(l => l._id);
-            query = { ...query, lead: { $in: leadIds } };
+        let query = { status: 'Due Follow-up' };
+
+        if (req.user.role === 'Employee') {
+            query.employee = req.user.id;
         }
 
         const dueCount = await Followup.countDocuments(query);
@@ -59,13 +66,74 @@ exports.createFollowup = async (req, res) => {
 // Complete a followup
 exports.updateFollowup = async (req, res) => {
     try {
-        const updatedFollowup = await Followup.findByIdAndUpdate(
-            req.params.id,
-            { status: req.body.status, remarks: req.body.remarks, nextFollowupDate: req.body.nextFollowupDate },
-            { new: true }
-        );
-        res.status(200).json(updatedFollowup);
+        const { status, remarks, nextFollowupDate, leadStatus } = req.body;
+
+        const followup = await Followup.findById(req.params.id);
+        if (!followup) return res.status(404).json({ message: 'Followup not found' });
+
+        if (req.user.role === 'Employee' && followup.employee.toString() !== req.user.id) {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        followup.status = status || followup.status;
+        followup.remarks = remarks || followup.remarks;
+        followup.nextFollowupDate = nextFollowupDate || followup.nextFollowupDate;
+
+        await followup.save();
+
+        if (leadStatus) {
+            const lead = await Lead.findById(followup.lead);
+            if (lead) {
+                if (leadStatus === 'Lead Done') {
+                    lead.result = 'Lead Won';
+                    lead.status = 'Lead Done';
+                } else if (leadStatus === 'Lead Not Done') {
+                    if (!remarks) {
+                        return res.status(400).json({ message: 'Comment is mandatory for Lead Not Done' });
+                    }
+                    lead.result = 'Lead Loss';
+                    lead.status = 'Lead Not Done';
+                } else {
+                    lead.status = leadStatus;
+                }
+
+                // Set the next followup date on the lead if provided
+                if (nextFollowupDate) {
+                    lead.nextFollowupDate = nextFollowupDate;
+                }
+
+                await lead.save();
+
+                if (remarks) {
+                    const Comment = require('../models/Comment');
+                    await new Comment({
+                        lead: lead._id,
+                        employee: req.user.id,
+                        text: remarks,
+                        type: (leadStatus === 'Lead Done' || leadStatus === 'Lead Not Done') ? 'Win/Loss Reason' : 'Follow-up Note'
+                    }).save();
+                }
+            }
+        }
+
+        res.status(200).json(followup);
     } catch (error) {
         res.status(500).json({ message: 'Error updating followup', error });
+    }
+};
+
+// Admin forces a followup
+exports.forceFollowup = async (req, res) => {
+    try {
+        const followup = await Followup.findById(req.params.id);
+        if (!followup) return res.status(404).json({ message: 'Followup not found' });
+
+        followup.adminForced = true;
+        followup.status = 'Due Follow-up';
+        await followup.save();
+
+        res.status(200).json({ message: 'Followup forced', followup });
+    } catch (error) {
+        res.status(500).json({ message: 'Error forcing followup', error });
     }
 };

@@ -21,4 +21,20 @@ const protect = (req, res, next) => {
     }
 };
 
-module.exports = { protect };
+const admin = (req, res, next) => {
+    if (req.user && (req.user.role === 'Admin' || req.user.role === 'Master Admin')) {
+        next();
+    } else {
+        return res.status(403).json({ message: 'Not authorized as an admin' });
+    }
+};
+
+const restrictToSelfOrAdmin = (req, res, next) => {
+    if (req.user && (req.user.role === 'Admin' || req.user.role === 'Master Admin' || req.user.id === req.params.id)) {
+        next();
+    } else {
+        return res.status(403).json({ message: 'Not authorized to access this resource' });
+    }
+};
+
+module.exports = { protect, admin, restrictToSelfOrAdmin };

@@ -59,7 +59,17 @@ const updateEmployee = async (req, res, next) => {
     try {
         const { name, email, phone, role, department, status, password } = req.body;
 
-        let updateFields = { name, email, phone, role, department, status };
+        let updateFields = {};
+        if (name) updateFields.name = name;
+        if (email) updateFields.email = email;
+        if (phone) updateFields.phone = phone;
+
+        // Only admins can change role, department, and status
+        if (req.user && (req.user.role === 'Admin' || req.user.role === 'Master Admin')) {
+            if (role) updateFields.role = role;
+            if (department) updateFields.department = department;
+            if (status) updateFields.status = status;
+        }
 
         if (password && password.trim() !== '') {
             updateFields.password = await bcrypt.hash(password, 10);
