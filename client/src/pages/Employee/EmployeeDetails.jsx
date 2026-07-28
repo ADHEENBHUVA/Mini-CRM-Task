@@ -9,7 +9,8 @@ const EmployeeDetails = () => {
     const [data, setData] = useState({
         employee: null,
         stats: { total: 0, won: 0, lost: 0, active: 0 },
-        leads: []
+        leads: [],
+        followups: []
     });
 
     useEffect(() => {
@@ -50,6 +51,18 @@ const EmployeeDetails = () => {
         }
     };
 
+    const handleForceFollowup = async (fId) => {
+        try {
+            const token = localStorage.getItem('token');
+            await axios.patch(`http://localhost:5000/api/followups/${fId}/force`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            fetchEmployeeDetails();
+        } catch (error) {
+            console.error("Failed to force follow-up", error);
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex h-[60vh] items-center justify-center">
@@ -74,7 +87,7 @@ const EmployeeDetails = () => {
         );
     }
 
-    const { employee, stats, leads } = data;
+    const { employee, stats, leads, followups } = data;
 
     return (
         <div className="flex flex-col gap-6 animate-in fade-in duration-500">
@@ -198,18 +211,79 @@ const EmployeeDetails = () => {
                                                     <p className="text-xs text-slate-500 mt-1">{lead.priority} Priority</p>
                                                 </td>
                                                 <td className="px-6 py-4 text-center">
-                                                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border ${lead.status === 'Won' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800' :
-                                                        lead.status === 'Lost' ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-400 dark:border-rose-800' :
+                                                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border ${lead.status === 'Won' || lead.status === 'Lead Done' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800' :
+                                                        lead.status === 'Lost' || lead.status === 'Lead Not Done' ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-400 dark:border-rose-800' :
                                                             'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-800'
                                                         }`}>
                                                         {lead.status}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">${lead.expectedBudget?.toLocaleString()}</p>
+                                                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">₹{lead.expectedBudget?.toLocaleString('en-IN')}</p>
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
                                                     <p className="text-xs text-slate-500 font-medium">{new Date(lead.createdAt).toLocaleDateString()}</p>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {/* Followups Table */}
+                    <div className="bg-white dark:bg-[#0F172A] rounded-3xl border border-slate-200 dark:border-[#1E293B] shadow-lg dark:shadow-xl overflow-hidden flex-1 mt-6">
+                        <div className="p-5 sm:p-6 border-b border-slate-200 dark:border-[#1E293B] bg-slate-50/50 dark:bg-[#151D2C]/50 flex items-center justify-between">
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Follow-up Activity</h3>
+                            <span className="text-sm text-slate-500 bg-white dark:bg-[#0B0F19] px-3 py-1 rounded-full shadow-sm font-medium">{followups.length} Records</span>
+                        </div>
+
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="bg-slate-50 dark:bg-[#1E293B]/50 text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider border-b border-slate-200 dark:border-[#1E293B]">
+                                        <th className="px-6 py-4">Lead</th>
+                                        <th className="px-6 py-4 text-center">Status</th>
+                                        <th className="px-6 py-4">Date</th>
+                                        <th className="px-6 py-4 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100 dark:divide-[#1E293B]">
+                                    {followups.length === 0 ? (
+                                        <tr>
+                                            <td colSpan="4" className="px-6 py-12 text-center text-slate-500">
+                                                No follow-ups for this employee.
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        followups.map((f) => (
+                                            <tr key={f._id} className="hover:bg-slate-50/80 dark:hover:bg-[#151D2C]/80 transition-colors group">
+                                                <td className="px-6 py-4">
+                                                    <p className="text-sm font-bold text-slate-900 dark:text-white transition-colors">{f.lead?.companyName || 'Unknown Lead'}</p>
+                                                    <p className="text-xs text-slate-500 mt-1 truncate max-w-[200px]">{f.remarks || 'No remarks context'}</p>
+                                                </td>
+                                                <td className="px-6 py-4 text-center">
+                                                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border ${f.status === 'Completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800' :
+                                                        f.status === 'Due Follow-up' ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-400 dark:border-rose-800' :
+                                                            'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800'
+                                                        }`}>
+                                                        {f.status} {f.adminForced && ' (FORCED)'}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{new Date(f.followupDate).toLocaleDateString()}</p>
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    {f.status !== 'Completed' && (
+                                                        <button
+                                                            disabled={f.adminForced}
+                                                            onClick={() => handleForceFollowup(f._id)}
+                                                            className="text-xs bg-indigo-100 hover:bg-indigo-200 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 dark:hover:bg-indigo-800 px-3 py-1.5 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed font-bold"
+                                                        >
+                                                            {f.adminForced ? 'Forced' : 'Force Follow-up'}
+                                                        </button>
+                                                    )}
                                                 </td>
                                             </tr>
                                         ))

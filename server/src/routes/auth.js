@@ -9,11 +9,14 @@ const JWT_SECRET = process.env.JWT_SECRET || 'secret_key_minicrm_jwt';
 // Login route
 router.post('/login', async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { email, password, loginAs } = req.body;
 
         // --- MOCK OVERRIDE for quick demo access ---
         const safeEmail = email ? email.toLowerCase().trim() : '';
         if (safeEmail === 'admin@nextbuy.com' || safeEmail === 'admin@minicrm.com' || safeEmail === 'admin') {
+            if (loginAs === 'Employee') {
+                return res.status(403).json({ message: 'Access Denied: Cannot use mock admin credentials in the Employee Portal.' });
+            }
             const token = jwt.sign({ id: 'mockadmin123', email: safeEmail, role: 'Admin' }, JWT_SECRET, { expiresIn: '1d' });
             return res.json({
                 message: 'Login successful',
@@ -23,15 +26,21 @@ router.post('/login', async (req, res) => {
         }
         // -------------------------------------------
 
-        // 1. Check if user exists in Admins collection
-        let user = await User.findOne({ email });
+        let user;
         let isEmployee = false;
 
-        // 1.5 If not an Admin, check the Employee collection
-        if (!user) {
+        if (loginAs === 'Employee') {
             const Employee = require('../models/Employee');
             user = await Employee.findOne({ email });
             isEmployee = true;
+        } else {
+            user = await User.findOne({ email });
+            // Fallback for Admin portal if an employee tries to log in
+            if (!user) {
+                const Employee = require('../models/Employee');
+                user = await Employee.findOne({ email });
+                isEmployee = true;
+            }
         }
 
         if (!user) {

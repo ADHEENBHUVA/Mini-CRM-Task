@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ArrowLeft, Clock, MessageSquare, Calendar, Building, User, Mail, Phone, CheckCircle, ChevronRight, Hash } from 'lucide-react';
+import { ArrowLeft, Clock, MessageSquare, Calendar, Building, User, Mail, Phone, CheckCircle, ChevronRight, Hash, Award, ThumbsDown, X } from 'lucide-react';
 
 const LeadDetails = () => {
     const { id } = useParams();
@@ -15,6 +15,10 @@ const LeadDetails = () => {
     const [noteInput, setNoteInput] = useState('');
     const [followupDate, setFollowupDate] = useState('');
     const [remarks, setRemarks] = useState('');
+
+    const [showResultModal, setShowResultModal] = useState(false);
+    const [resultType, setResultType] = useState(''); // 'Lead Won' or 'Lead Loss'
+    const [resultComment, setResultComment] = useState('');
 
     useEffect(() => {
         fetchLeadData();
@@ -79,6 +83,27 @@ const LeadDetails = () => {
         }
     };
 
+    const handleResultSubmit = async (e) => {
+        e.preventDefault();
+        // Comment mandatory for Loss
+        if (resultType === 'Lead Loss' && !resultComment.trim()) return;
+
+        try {
+            const token = localStorage.getItem('token');
+            await axios.patch(`http://localhost:5000/api/leads/${id}/result`, {
+                result: resultType,
+                comment: resultComment
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setShowResultModal(false);
+            setResultComment('');
+            fetchLeadData();
+        } catch (error) {
+            console.error('Failed to update lead result', error);
+        }
+    };
+
     if (loading) return <div className="p-10 font-bold text-center">Loading Lead Architecture...</div>;
     if (!lead) return <div className="p-10 font-bold text-center text-rose-500">Error: Lead Not Found</div>;
 
@@ -114,6 +139,16 @@ const LeadDetails = () => {
                 <div className="flex flex-col items-end">
                     <p className="text-sm text-slate-500 dark:text-slate-400">Assigned To</p>
                     <p className="font-bold text-indigo-600 dark:text-indigo-400">{lead.assignedEmployee?.name || 'Unassigned'}</p>
+                    {lead.result === 'Pending' && (
+                        <div className="flex gap-2 mt-3">
+                            <button onClick={() => { setResultType('Lead Won'); setShowResultModal(true); }} className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold rounded-lg transition-colors shadow-sm">
+                                <Award className="w-4 h-4" /> Lead Done
+                            </button>
+                            <button onClick={() => { setResultType('Lead Loss'); setShowResultModal(true); }} className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-500 hover:bg-rose-600 text-white text-sm font-bold rounded-lg transition-colors shadow-sm">
+                                <ThumbsDown className="w-4 h-4" /> Not Done
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -199,6 +234,45 @@ const LeadDetails = () => {
                 </div>
 
             </div>
+
+            {/* Result Modal */}
+            {showResultModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white dark:bg-[#0F172A] w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 dark:border-[#1E293B] overflow-hidden">
+                        <div className="p-4 border-b border-slate-100 dark:border-[#1E293B] flex justify-between items-center bg-slate-50 dark:bg-[#151D2C]">
+                            <h3 className="font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
+                                {resultType === 'Lead Won' ? <Award className="w-5 h-5 text-emerald-500" /> : <ThumbsDown className="w-5 h-5 text-rose-500" />}
+                                {resultType === 'Lead Won' ? 'Mark Lead as Done (Won)' : 'Mark Lead as Not Done (Lost)'}
+                            </h3>
+                            <button onClick={() => setShowResultModal(false)} className="text-slate-400 hover:text-slate-500">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <form onSubmit={handleResultSubmit} className="p-5 flex flex-col gap-4">
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+                                    Reason / Comments {resultType === 'Lead Loss' && <span className="text-rose-500">*</span>}
+                                </label>
+                                <textarea
+                                    value={resultComment}
+                                    onChange={(e) => setResultComment(e.target.value)}
+                                    placeholder={resultType === 'Lead Loss' ? "Explain why this lead was lost..." : "Any closing remarks? (Optional)"}
+                                    className="w-full px-4 py-3 bg-slate-50 dark:bg-[#0B0F19] border border-slate-200 dark:border-[#2A374C] rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 resize-none h-24"
+                                    required={resultType === 'Lead Loss'}
+                                ></textarea>
+                            </div>
+                            <div className="flex justify-end gap-3 mt-2">
+                                <button type="button" onClick={() => setShowResultModal(false)} className="px-4 py-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1E293B] rounded-lg font-semibold transition-colors">
+                                    Cancel
+                                </button>
+                                <button type="submit" disabled={resultType === 'Lead Loss' && !resultComment.trim()} className={`px-5 py-2 text-white font-bold rounded-lg transition-colors shadow-sm ${resultType === 'Lead Won' ? 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/30' : 'bg-rose-500 hover:bg-rose-600 shadow-rose-500/30'}`}>
+                                    Confirm {resultType === 'Lead Won' ? 'Win' : 'Loss'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { User, Mail, ShieldAlert, Key, Save, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
+import axios from 'axios';
 
 const Profile = () => {
     // Assuming we fetch user details from localstorage or context (matching Navbar logic)
@@ -23,24 +24,46 @@ const Profile = () => {
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-    const handleProfileUpdate = (e) => {
+    const handleProfileUpdate = async (e) => {
         e.preventDefault();
-        const updatedUser = { ...user, name };
-        localStorage.setItem('user', JSON.stringify(updatedUser));
-        setUser(updatedUser);
-        toast.success('Profile Updated Successfully!');
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.put(`http://localhost:5000/api/employees/${user.id || user._id}`, {
+                name
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const updatedUser = { ...user, name: res.data.name };
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+            setUser(updatedUser);
+            toast.success('Profile Updated Successfully!');
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to update profile');
+        }
     };
 
-    const handlePasswordUpdate = (e) => {
+    const handlePasswordUpdate = async (e) => {
         e.preventDefault();
         if (newPassword !== confirmPassword) {
             toast.error("Passwords don't match!");
             return;
         }
-        toast.success('Password Changed Successfully!');
-        setOldPassword('');
-        setNewPassword('');
-        setConfirmPassword('');
+
+        try {
+            const token = localStorage.getItem('token');
+            await axios.put(`http://localhost:5000/api/employees/${user.id || user._id}`, {
+                oldPassword,
+                password: newPassword
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            toast.success('Password Changed Successfully!');
+            setOldPassword('');
+            setNewPassword('');
+            setConfirmPassword('');
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to change password');
+        }
     };
 
     return (

@@ -12,8 +12,8 @@ const LeadSchema = new mongoose.Schema({
     priority: { type: String, enum: ['Low', 'Medium', 'High'], default: 'Medium' },
     status: {
         type: String,
-        enum: ['Pending', 'Interested', 'Not Interested', 'Callback', 'Follow-up Scheduled', 'Lead Done', 'Lead Not Done'],
-        default: 'Pending'
+        enum: ['New', 'Pending', 'Contacted', 'Qualified', 'Proposal Sent', 'Interested', 'Not Interested', 'Callback', 'Follow-up Scheduled', 'Lead Done', 'Lead Not Done'],
+        default: 'New'
     },
     result: {
         type: String,

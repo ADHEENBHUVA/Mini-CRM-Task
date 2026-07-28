@@ -4,6 +4,7 @@ import { Home, Users, Briefcase, CalendarClock, User, LogOut, X } from 'lucide-r
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
     const navItems = [
+        { label: 'Dashboard', icon: Home, path: '/' },
         { label: 'Leads', icon: Briefcase, path: '/leads' },
         { label: 'Followups', icon: CalendarClock, path: '/followups' },
         { label: 'Profile', icon: User, path: '/profile' },

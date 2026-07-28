@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { body, validationResult } = require('express-validator');
-const { getLeads, createLead, updateLead, updateLeadStatus, deleteLead, getLeadDetails, addNote, addFollowup, markFollowupCompleted } = require('../controllers/leadController');
+const { getLeads, createLead, updateLead, updateLeadStatus, deleteLead, getLeadDetails, addNote, addFollowup, markFollowupCompleted, updateLeadResult } = require('../controllers/leadController');
 const { protect, admin } = require('../middleware/authMiddleware');
 
 const validate = (req, res, next) => {
@@ -24,6 +24,9 @@ router.patch('/:id/status', protect, [
 ], validate, updateLeadStatus);
 
 router.put('/:id', protect, updateLead);
+router.patch('/:id/result', protect, [
+    body('result').isIn(['Lead Won', 'Lead Loss'])
+], validate, updateLeadResult);
 router.delete('/:id', protect, admin, deleteLead);
 
 router.get('/:id', protect, getLeadDetails);

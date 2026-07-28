@@ -184,10 +184,10 @@ const LeadForm = () => {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Expected Budget ($)</label>
+                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Expected Budget (₹)</label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <span className="text-slate-400 font-bold">$</span>
+                                    <span className="text-slate-400 font-bold">₹</span>
                                 </div>
                                 <input required type="number" name="expectedBudget" value={formData.expectedBudget} onChange={handleChange} className="w-full pl-8 pr-4 py-3 bg-slate-50 dark:bg-[#151D2C] border border-slate-200 dark:border-[#2A374C] rounded-xl text-slate-900 dark:text-white focus:ring-1 focus:ring-indigo-500 outline-none transition-colors" placeholder="5000" />
                             </div>

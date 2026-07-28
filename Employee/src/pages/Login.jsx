@@ -20,10 +20,18 @@ const Login = () => {
         try {
             const response = await axios.post('http://localhost:5000/api/auth/login', {
                 email,
-                password
+                password,
+                loginAs: 'Employee'
             });
 
             const { token, user } = response.data;
+
+            if (user.role === 'Admin' || user.role === 'Master Admin' || user.role === 'Superadmin') {
+                setError("Access Denied: Please use the Master Admin Portal to log in as an Admin.");
+                setLoading(false);
+                return;
+            }
+
             localStorage.setItem('token', token);
             localStorage.setItem('user', JSON.stringify(user));
 

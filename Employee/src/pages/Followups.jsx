@@ -93,9 +93,15 @@ const Followups = () => {
                             <p className="text-slate-400 italic">No completed follow-ups.</p>
                         ) : (
                             completed.map(f => (
-                                <div key={f._id} className="p-4 rounded-2xl border bg-slate-50 border-slate-200 dark:bg-[#151D2C] dark:border-[#2A374C]">
-                                    <p className="font-bold text-slate-700 dark:text-slate-300 line-through">{f.lead?.companyName || 'Unknown Lead'}</p>
-                                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{f.remarks}</p>
+                                <div key={f._id} className="p-4 rounded-2xl border bg-slate-50 border-slate-200 dark:bg-[#151D2C] dark:border-[#2A374C] flex justify-between items-center opacity-80 transition-all hover:opacity-100">
+                                    <div>
+                                        <p className="font-bold text-slate-700 dark:text-slate-300">{f.lead?.companyName || 'Unknown Lead'}</p>
+                                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{f.remarks ? f.remarks : 'No remarks attached.'}</p>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-100 dark:border-emerald-500/20">
+                                        <CheckCircle className="w-4 h-4" />
+                                        <span className="text-xs font-bold uppercase tracking-wide">Done</span>
+                                    </div>
                                 </div>
                             ))
                         )}

@@ -30,7 +30,7 @@ function App() {
 
                 {/* Protected Routes inside DashboardLayout */}
                 <Route path="/" element={<DashboardLayout />}>
-                    <Route index element={<Navigate to="/leads" replace />} />
+                    <Route index element={<Dashboard />} />
                     <Route path="leads" element={<LeadsList />} />
                     <Route path="leads/new" element={<LeadForm />} />
                     <Route path="leads/:id" element={<LeadDetails />} />

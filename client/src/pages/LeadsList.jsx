@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Briefcase, Search, Plus, ExternalLink, User, Eye, Edit2, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -9,6 +9,7 @@ const LeadsList = () => {
     const [loading, setLoading] = useState(true);
     const [employees, setEmployees] = useState([]);
     const [selectedEmployee, setSelectedEmployee] = useState('');
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -93,6 +94,7 @@ const LeadsList = () => {
                                 <th className="px-6 py-4">Client Name</th>
                                 <th className="px-6 py-4">Company</th>
                                 <th className="px-6 py-4">Status</th>
+                                <th className="px-6 py-4">Assigned To</th>
                                 <th className="px-6 py-4 text-right">Action</th>
                             </tr>
                         </thead>
@@ -108,21 +110,25 @@ const LeadsList = () => {
                                         No leads found. Create your first lead to begin!
                                     </td>
                                 </tr>
+
                             ) : (
                                 filteredLeads.map((lead) => (
-                                    <tr key={lead._id} className="hover:bg-slate-50/80 dark:hover:bg-[#151D2C]/80 transition-colors group">
+                                    <tr key={lead._id} onClick={() => navigate(`/leads/${lead._id}`)} className="hover:bg-slate-50/80 dark:hover:bg-[#151D2C]/80 transition-colors group cursor-pointer">
                                         <td className="px-6 py-4 font-bold text-slate-900 dark:text-white">{lead.contactPerson}</td>
                                         <td className="px-6 py-4 font-medium text-slate-700 dark:text-slate-300">{lead.companyName}</td>
                                         <td className="px-6 py-4 text-indigo-600 dark:text-indigo-400 font-semibold">{lead.status}</td>
+                                        <td className="px-6 py-4 text-sm font-medium text-slate-700 dark:text-slate-300">
+                                            {lead.assignedEmployee ? lead.assignedEmployee.name : <span className="text-slate-400 italic">Unassigned</span>}
+                                        </td>
                                         <td className="px-6 py-4 text-right">
                                             <div className="flex items-center justify-end gap-1.5 sm:gap-2">
-                                                <Link to={`/leads/${lead._id}`} className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-lg transition-all" title="View Details">
+                                                <Link to={`/leads/${lead._id}`} onClick={(e) => e.stopPropagation()} className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-lg transition-all" title="View Details">
                                                     <Eye className="w-[18px] h-[18px]" strokeWidth={2.2} />
                                                 </Link>
-                                                <Link to={`/leads/${lead._id}/edit`} className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 rounded-lg transition-all" title="Edit">
+                                                <Link to={`/leads/${lead._id}/edit`} onClick={(e) => e.stopPropagation()} className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 rounded-lg transition-all" title="Edit">
                                                     <Edit2 className="w-[18px] h-[18px]" strokeWidth={2.2} />
                                                 </Link>
-                                                <button onClick={() => handleDelete(lead._id)} className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-all" title="Delete">
+                                                <button onClick={(e) => { e.stopPropagation(); handleDelete(lead._id); }} className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-all" title="Delete">
                                                     <Trash2 className="w-[18px] h-[18px]" strokeWidth={2.2} />
                                                 </button>
                                             </div>

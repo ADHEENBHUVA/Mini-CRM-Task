@@ -5,7 +5,7 @@ const getLeads = async (req, res, next) => {
         const query = {};
 
         // If the logged in user is a Standard Employee, lock down the visibility scope
-        if (req.user && req.user.role === 'Employee') {
+        if (req.user && (req.user.role === 'Employee' || req.user.role === 'Standard')) {
             query.assignedEmployee = req.user.id;
         }
         if (req.query.status) query.status = req.query.status;
@@ -27,7 +27,10 @@ const getLeads = async (req, res, next) => {
 const createLead = async (req, res, next) => {
     try {
         const lead = new Lead(req.body);
-        lead.status = 'New'; // Explicit default per spec
+        if (req.user && req.user.role === 'Employee') {
+            lead.assignedEmployee = req.user.id;
+        }
+
         await lead.save();
         res.status(201).json({ message: 'Lead created successfully', lead });
     } catch (error) {
@@ -60,6 +63,44 @@ const updateLeadStatus = async (req, res, next) => {
         lead.status = status;
         await lead.save();
         res.json({ message: 'Lead status updated', lead });
+    } catch (error) {
+        next(error);
+    }
+};
+
+const updateLeadResult = async (req, res, next) => {
+    try {
+        const { result, comment } = req.body;
+        const lead = await Lead.findById(req.params.id);
+
+        if (!lead) return res.status(404).json({ message: 'Lead not found' });
+
+        if (req.user && req.user.role === 'Employee') {
+            if (!lead.assignedEmployee || lead.assignedEmployee.toString() !== req.user.id) {
+                return res.status(403).json({ message: 'Not authorized to modify this lead' });
+            }
+        }
+
+        if (result === 'Lead Loss' && !comment) {
+            return res.status(400).json({ message: 'Comment is mandatory when lead is lost' });
+        }
+
+        lead.result = result;
+        lead.status = result === 'Lead Won' ? 'Lead Done' : 'Lead Not Done';
+        await lead.save();
+
+        if (comment) {
+            const Comment = require('../models/Comment');
+            const newComment = new Comment({
+                lead: lead._id,
+                employee: req.user ? req.user.id : null,
+                text: comment,
+                type: 'Win/Loss Reason'
+            });
+            await newComment.save();
+        }
+
+        res.json({ message: 'Lead result updated successfully', lead });
     } catch (error) {
         next(error);
     }
@@ -203,5 +244,6 @@ module.exports = {
     getLeadDetails,
     addNote,
     addFollowup,
-    markFollowupCompleted
+    markFollowupCompleted,
+    updateLeadResult
 };

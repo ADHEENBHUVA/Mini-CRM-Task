@@ -20,14 +20,18 @@ const getEmployeeById = async (req, res, next) => {
 
         const leads = await Lead.find({ assignedEmployee: employee._id }).sort({ createdAt: -1 });
         const total = leads.length;
-        const won = leads.filter(l => l.status === 'Won').length;
-        const lost = leads.filter(l => l.status === 'Lost').length;
-        const active = leads.filter(l => !['Won', 'Lost'].includes(l.status)).length;
+        const won = leads.filter(l => l.status === 'Won' || l.status === 'Lead Done' || l.result === 'Lead Won').length;
+        const lost = leads.filter(l => l.status === 'Lost' || l.status === 'Lead Not Done' || l.result === 'Lead Loss').length;
+        const active = leads.filter(l => !['Won', 'Lost', 'Lead Done', 'Lead Not Done'].includes(l.status)).length;
+
+        const Followup = require('../models/Followup');
+        const followups = await Followup.find({ employee: employee._id }).populate('lead', 'companyName status').sort({ nextFollowupDate: 1 });
 
         res.json({
             employee,
             stats: { total, won, lost, active },
-            leads
+            leads,
+            followups
         });
     } catch (error) {
         next(error);
@@ -72,6 +76,17 @@ const updateEmployee = async (req, res, next) => {
         }
 
         if (password && password.trim() !== '') {
+            if (req.user && req.user.role === 'Employee') {
+                const { oldPassword } = req.body;
+                if (!oldPassword) {
+                    return res.status(400).json({ message: 'Current password is required to change it.' });
+                }
+                const employeeRecord = await Employee.findById(req.params.id);
+                const isMatch = await bcrypt.compare(oldPassword, employeeRecord.password);
+                if (!isMatch) {
+                    return res.status(401).json({ message: 'Incorrect current password.' });
+                }
+            }
             updateFields.password = await bcrypt.hash(password, 10);
         }
 

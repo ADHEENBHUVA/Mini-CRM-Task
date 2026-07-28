@@ -1,16 +1,17 @@
 const Lead = require('../models/Lead');
 const Followup = require('../models/Followup');
 const Employee = require('../models/Employee');
+const mongoose = require('mongoose');
 
 exports.getDashboardStats = async (req, res) => {
     try {
-        const isAdmin = req.user && (req.user.role === 'Admin' || req.user.role === 'Master Admin');
+        const isAdmin = req.user && (req.user.role === 'Admin' || req.user.role === 'Master Admin' || req.user.role === 'Superadmin');
         let leadQuery = {};
         let followupQuery = {};
 
         if (!isAdmin) {
-            leadQuery = { assignedEmployee: req.user.id };
-            followupQuery = { employee: req.user.id };
+            leadQuery = { assignedEmployee: new mongoose.Types.ObjectId(req.user.id) };
+            followupQuery = { employee: new mongoose.Types.ObjectId(req.user.id) };
         }
 
         const { filter, startDate, endDate, specificDate } = req.query;
@@ -83,6 +84,38 @@ exports.getDashboardStats = async (req, res) => {
             value: stat.count
         }));
 
+        // Fetch Monthly Data for the Bar Chart
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+        sixMonthsAgo.setDate(1);
+        sixMonthsAgo.setHours(0, 0, 0, 0);
+
+        const monthlyActivity = await Lead.aggregate([
+            { $match: { ...leadQuery, createdAt: { $gte: sixMonthsAgo } } },
+            {
+                $group: {
+                    _id: { $month: "$createdAt" },
+                    leads: { $sum: 1 }
+                }
+            },
+            { $sort: { "_id": 1 } }
+        ]);
+
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        let monthlyData = [];
+
+        // Populate the last 6 months to ensure chart displays nicely even if no leads exist
+        for (let i = 5; i >= 0; i--) {
+            const d = new Date();
+            d.setMonth(d.getMonth() - i);
+            const m = d.getMonth() + 1; // 1-12
+            const found = monthlyActivity.find(x => x._id === m);
+            monthlyData.push({
+                name: monthNames[d.getMonth()],
+                leads: found ? found.leads : 0
+            });
+        }
+
         res.json({
             ok: true,
             data: {
@@ -91,7 +124,8 @@ exports.getDashboardStats = async (req, res) => {
                 todaysFollowups, completedFollowups, pendingFollowups, dueFollowups,
                 activeEmployees, inactiveEmployees,
                 winRate, lossRate, conversionRate,
-                statusData: formattedStatusData
+                statusData: formattedStatusData,
+                monthlyData: monthlyData
             }
         });
     } catch (error) {
