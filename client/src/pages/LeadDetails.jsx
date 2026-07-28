@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { ArrowLeft, Clock, MessageSquare, Calendar, Building, User, Mail, Phone, CheckCircle, ChevronRight, Hash } from 'lucide-react';
@@ -21,6 +21,12 @@ const LeadDetails = () => {
     const [empSearch, setEmpSearch] = useState('');
     const [selectedEmployee, setSelectedEmployee] = useState('');
     const [showEmpDropdown, setShowEmpDropdown] = useState(false);
+
+    const messagesEndRef = useRef(null);
+
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [notes]);
 
     const user = JSON.parse(localStorage.getItem('user')) || {};
     const isAdmin = user.role === 'Admin' || user.role === 'Master Admin' || user.role === 'Superadmin';
@@ -235,7 +241,7 @@ const LeadDetails = () => {
                                     <div key={f._id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 rounded-2xl border border-indigo-100 dark:border-indigo-500/20 bg-indigo-50/50 dark:bg-indigo-500/5 group transition-colors">
                                         <div>
                                             <p className="font-bold text-indigo-900 dark:text-indigo-300">{f.remarks || 'Standard Lead Follow-up'}</p>
-                                            <p className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 mt-1 uppercase tracking-wider">{new Date(f.followupDate).toLocaleString()}</p>
+                                            <p className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 mt-1 uppercase tracking-wider">{new Date(f.followupDate).toLocaleString('en-GB')}</p>
                                         </div>
                                         <button onClick={() => markFollowupComplete(f._id)} className="mt-3 sm:mt-0 flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#1E293B] text-indigo-600 dark:text-indigo-400 hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-500 dark:hover:text-white border border-indigo-200 dark:border-indigo-500/30 rounded-lg text-sm font-bold transition-all shadow-sm">
                                             <CheckCircle className="w-4 h-4" /> Mark Done
@@ -248,30 +254,47 @@ const LeadDetails = () => {
                 </div>
 
                 {/* Right Column: Internal Notes */}
-                <div className="bg-white dark:bg-[#0B0F19]/80 backdrop-blur-sm p-6 rounded-3xl border border-slate-200 dark:border-[#1E293B] shadow-lg shadow-slate-200/50 dark:shadow-xl flex flex-col h-[600px] transition-colors">
+                <div className="bg-white dark:bg-[#0B0F19]/80 backdrop-blur-sm p-6 rounded-3xl border border-slate-200 dark:border-[#1E293B] shadow-lg shadow-slate-200/50 dark:shadow-xl flex flex-col h-[600px] transition-colors relative overflow-hidden">
+                    {/* Subtle aesthetic background flare */}
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl -z-10 pointer-events-none"></div>
+
                     <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2 shrink-0">
-                        <MessageSquare className="w-5 h-5 text-amber-500" /> Internal Notes
+                        <div className="p-2 bg-indigo-100 dark:bg-indigo-500/20 rounded-lg">
+                            <MessageSquare className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                        </div>
+                        Internal Notes
                     </h3>
 
-                    <div className="flex-1 overflow-y-auto mb-4 border-y border-slate-100 dark:border-[#1E293B] py-4 pr-2 space-y-4">
+                    <div className="flex-1 overflow-y-auto mb-4 border-t border-slate-100 dark:border-[#1E293B] pt-6 pb-2 pr-4 flex flex-col space-y-5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-slate-200 dark:[&::-webkit-scrollbar-thumb]:bg-slate-700 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
                         {notes.length === 0 ? (
-                            <p className="text-slate-400 text-sm italic text-center mt-10">No notes found for this lead.</p>
+                            <div className="flex flex-col items-center justify-center h-full opacity-50">
+                                <MessageSquare className="w-10 h-10 text-slate-400 mb-3" />
+                                <p className="text-slate-500 text-sm font-semibold">No notes found for this lead.</p>
+                            </div>
                         ) : (
-                            notes.map(note => (
-                                <div key={note._id} className="bg-slate-50 dark:bg-[#151D2C] p-4 rounded-2xl border border-slate-200 dark:border-[#2A374C]">
-                                    <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-medium">{note.note}</p>
-                                    <div className="mt-3 flex justify-between items-center text-xs">
-                                        <span className="font-bold text-slate-900 dark:text-white">Admin Note</span>
-                                        <span className="text-slate-400 uppercase tracking-widest text-[10px]">{new Date(note.createdAt).toLocaleDateString()}</span>
+                            notes.map(note => {
+                                const isMe = note.createdBy?.role !== 'Employee' && note.createdBy?.role !== 'Standard';
+                                return (
+                                    <div key={note._id} className={`max-w-[85%] p-4 transition-all shadow-sm group ${isMe ? 'self-end bg-gradient-to-br from-indigo-500 to-indigo-600 text-white rounded-2xl rounded-br-sm shadow-indigo-500/20' : 'self-start bg-slate-50 dark:bg-[#151D2C] border border-slate-100 dark:border-slate-800 text-slate-800 dark:text-slate-200 rounded-2xl rounded-bl-sm'}`}>
+                                        <p className="text-sm leading-relaxed font-medium">{note.note}</p>
+                                        <div className={`mt-2 flex justify-between items-center text-[10px] uppercase font-bold tracking-wider ${isMe ? 'text-indigo-200' : 'text-slate-400'}`}>
+                                            <span>
+                                                {note.createdBy?.role === 'Employee' || note.createdBy?.role === 'Standard' ? 'Employee Note' : 'Admin Note'}
+                                            </span>
+                                            <span className="opacity-0 group-hover:opacity-100 transition-opacity ml-4">{new Date(note.createdAt).toLocaleDateString('en-GB')} {new Date(note.createdAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>
+                                        </div>
                                     </div>
-                                </div>
-                            ))
+                                );
+                            })
                         )}
+                        <div ref={messagesEndRef} />
                     </div>
 
-                    <form onSubmit={handleAddNote} className="shrink-0 flex gap-2">
-                        <input type="text" value={noteInput} onChange={(e) => setNoteInput(e.target.value)} placeholder="Log a quick update..." className="flex-1 px-4 py-3 bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-[#2A374C] rounded-xl text-slate-900 dark:text-white focus:ring-1 focus:ring-amber-500 outline-none text-sm font-medium" />
-                        <button type="submit" disabled={!noteInput.trim()} className="p-3 bg-amber-500 hover:bg-amber-400 text-white rounded-xl shadow-[0_4px_15px_rgba(245,158,11,0.3)] disabled:opacity-50 transition-all flex items-center justify-center shrink-0">
+                    <form onSubmit={handleAddNote} className="shrink-0 flex items-center gap-3 bg-slate-50 dark:bg-[#0F1523] p-2 rounded-2xl border border-slate-200 dark:border-[#2A374C] focus-within:ring-2 focus-within:ring-indigo-500/50 transition-all">
+                        <div className="flex-1 pl-3">
+                            <input type="text" value={noteInput} onChange={(e) => setNoteInput(e.target.value)} placeholder="Type a quick update..." className="w-full bg-transparent text-slate-900 dark:text-white outline-none text-sm font-medium placeholder:text-slate-400" />
+                        </div>
+                        <button type="submit" disabled={!noteInput.trim()} className="p-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow-[0_4px_15px_rgba(79,70,229,0.3)] disabled:opacity-50 disabled:shadow-none transition-all flex items-center justify-center shrink-0">
                             <Hash className="w-5 h-5" />
                         </button>
                     </form>

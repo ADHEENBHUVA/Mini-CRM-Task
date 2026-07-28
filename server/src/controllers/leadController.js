@@ -93,7 +93,7 @@ const updateLeadResult = async (req, res, next) => {
             const Comment = require('../models/Comment');
             const newComment = new Comment({
                 lead: lead._id,
-                employee: req.user ? req.user.id : null,
+                employee: (req.user && req.user.role !== 'Admin' && req.user.role !== 'Master Admin') ? req.user.id : null,
                 text: comment,
                 type: 'Win/Loss Reason'
             });
@@ -154,7 +154,7 @@ const getLeadDetails = async (req, res, next) => {
         const Note = require('../models/Note');
         const Followup = require('../models/Followup');
 
-        const notes = await Note.find({ lead: lead._id }).populate('createdBy', 'name role').sort({ createdAt: -1 });
+        const notes = await Note.find({ lead: lead._id }).populate('createdBy', 'name role').sort({ createdAt: 1 });
         const followups = await Followup.find({ lead: lead._id }).sort({ followupDate: 1 });
 
         res.json({ lead, notes, followups });
@@ -178,7 +178,7 @@ const addNote = async (req, res, next) => {
         const newNote = new Note({
             lead: req.params.id,
             note: req.body.note,
-            createdBy: req.user ? req.user.id : req.body.userId
+            createdBy: (req.user && req.user.role !== 'Admin' && req.user.role !== 'Master Admin') ? req.user.id : null
         });
         await newNote.save();
         res.status(201).json({ message: 'Note added successfully', note: newNote });

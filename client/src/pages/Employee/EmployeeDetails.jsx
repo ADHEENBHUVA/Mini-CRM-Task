@@ -222,7 +222,7 @@ const EmployeeDetails = () => {
                                                     <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">₹{lead.expectedBudget?.toLocaleString('en-IN')}</p>
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
-                                                    <p className="text-xs text-slate-500 font-medium">{new Date(lead.createdAt).toLocaleDateString()}</p>
+                                                    <p className="text-xs text-slate-500 font-medium">{new Date(lead.createdAt).toLocaleDateString('en-GB')}</p>
                                                 </td>
                                             </tr>
                                         ))
@@ -272,7 +272,7 @@ const EmployeeDetails = () => {
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{new Date(f.followupDate).toLocaleDateString()}</p>
+                                                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{new Date(f.followupDate).toLocaleDateString('en-GB')}</p>
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
                                                     {f.status !== 'Completed' && (

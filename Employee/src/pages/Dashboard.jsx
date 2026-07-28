@@ -5,7 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveCont
 import { Link } from 'react-router-dom';
 import { Users, Briefcase, CalendarClock, TrendingUp, CheckCircle, Clock, ChevronDown, Download, FileText, FileSpreadsheet } from 'lucide-react';
 
-const COLORS = ['#4F46E5', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444', '#64748B'];
+const COLORS = ['#818CF8', '#34D399', '#FBBF24', '#F472B6', '#A78BFA', '#38BDF8'];
 
 const Dashboard = () => {
     const [stats, setStats] = useState({
@@ -109,7 +109,7 @@ const Dashboard = () => {
             // Footer
             doc.setTextColor(148, 163, 184);
             doc.setFontSize(10);
-            doc.text(`Report mathematically generated at: ${new Date().toLocaleString()}`, 20, 280);
+            doc.text(`Report mathematically generated at: ${new Date().toLocaleString('en-GB')}`, 20, 280);
 
             doc.save('NextBuy_Analytics_Report.pdf');
             return;
@@ -252,12 +252,8 @@ const Dashboard = () => {
                             <BarChart data={stats.monthlyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                 <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} dy={10} />
                                 <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} dx={-10} allowDecimals={false} />
-                                <RechartsTooltip
-                                    cursor={{ fill: 'rgba(148, 163, 184, 0.1)' }}
-                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', backgroundColor: '#1E293B', color: '#fff' }}
-                                    itemStyle={{ color: '#818CF8' }}
-                                />
-                                <Bar dataKey="leads" fill="#4F46E5" radius={[6, 6, 0, 0]} barSize={45} />
+                                <RechartsTooltip cursor={false} contentStyle={{ backgroundColor: '#1E293B', border: 'none', borderRadius: '12px', color: '#fff', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)' }} itemStyle={{ color: '#818CF8' }} />
+                                <Bar dataKey="leads" fill="#818CF8" radius={[6, 6, 0, 0]} barSize={45} />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>

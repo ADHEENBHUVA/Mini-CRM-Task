@@ -11,7 +11,7 @@ exports.getFollowups = async (req, res) => {
         );
 
         let query = {};
-        if (req.user.role === 'Employee') {
+        if (req.user.role === 'Employee' || req.user.role === 'Standard') {
             query.employee = req.user.id;
         }
 
@@ -33,7 +33,7 @@ exports.getDueFollowupsCount = async (req, res) => {
 
         let query = { status: 'Due Follow-up' };
 
-        if (req.user.role === 'Employee') {
+        if (req.user.role === 'Employee' || req.user.role === 'Standard') {
             query.employee = req.user.id;
         }
 
@@ -51,6 +51,7 @@ exports.createFollowup = async (req, res) => {
 
         const newFollowup = new Followup({
             lead: leadId,
+            employee: req.user.id,
             followupDate,
             remarks,
             nextFollowupDate
