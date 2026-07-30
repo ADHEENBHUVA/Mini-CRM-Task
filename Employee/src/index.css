@@ -89,3 +89,47 @@ select option {
   background-color: #1E293B;
   color: #e2e8f0;
 }
+
+/* Recharts Hover Pointer Fix - Aggressive */
+.recharts-wrapper,
+.recharts-wrapper *,
+.recharts-surface,
+.recharts-surface *,
+.recharts-sector,
+.recharts-pie-sector,
+.recharts-bar-rectangle,
+.recharts-layer,
+.recharts-tooltip-wrapper,
+.recharts-tooltip-wrapper *,
+.recharts-tooltip-cursor,
+[class^="recharts-"],
+[class*="recharts-"] {
+  cursor: pointer !important;
+}
+
+/* Premium Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}

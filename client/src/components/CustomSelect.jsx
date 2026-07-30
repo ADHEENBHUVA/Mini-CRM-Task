@@ -27,7 +27,12 @@ const CustomSelect = ({ value, onChange, options, name, className = '', placehol
     };
 
     return (
-        <div className={`relative ${className}`} ref={wrapperRef}>
+        <div
+            className={`relative ${className}`}
+            ref={wrapperRef}
+            onMouseEnter={() => setIsOpen(true)}
+            onMouseLeave={() => setIsOpen(false)}
+        >
             {/* Trigger Button */}
             <button
                 type="button"
@@ -40,20 +45,22 @@ const CustomSelect = ({ value, onChange, options, name, className = '', placehol
 
             {/* Dropdown Options */}
             {isOpen && (
-                <div className="absolute z-50 w-full mt-2 bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-[#2A374C] rounded-xl shadow-xl dark:shadow-[0_10px_40px_rgba(0,0,0,0.5)] overflow-hidden animate-in slide-in-from-top-2 duration-200 max-h-60 overflow-y-auto">
-                    {options.map((opt) => (
-                        <button
-                            type="button"
-                            key={opt.value}
-                            onClick={() => handleSelect(opt.value)}
-                            className={`w-full text-left px-4 py-3 text-sm font-medium transition-colors duration-150 ${value === opt.value
+                <div className="absolute top-full left-0 z-50 w-full pt-2">
+                    <div className="bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-[#2A374C] rounded-xl shadow-xl dark:shadow-[0_10px_40px_rgba(0,0,0,0.5)] overflow-hidden animate-in slide-in-from-top-2 duration-200 max-h-60 overflow-y-auto">
+                        {options.map((opt) => (
+                            <button
+                                type="button"
+                                key={opt.value}
+                                onClick={() => handleSelect(opt.value)}
+                                className={`w-full text-left px-4 py-3 text-sm font-medium transition-colors duration-150 ${value === opt.value
                                     ? 'bg-indigo-50 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 font-semibold'
                                     : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#151D2C]'
-                                }`}
-                        >
-                            {opt.label}
-                        </button>
-                    ))}
+                                    }`}
+                            >
+                                {opt.label}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             )}
         </div>

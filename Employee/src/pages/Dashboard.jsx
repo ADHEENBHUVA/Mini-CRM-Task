@@ -263,8 +263,8 @@ const Dashboard = () => {
                 <div className="lg:col-span-2 bg-white dark:bg-[#0B0F19]/80 backdrop-blur-sm p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-[#1E293B] shadow-lg shadow-slate-200/50 dark:shadow-xl min-h-[400px] flex flex-col transition-colors z-0">
                     <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-6">Monthly Leads Activity (Histogram)</h3>
                     <div className="flex-1 w-full h-full min-h-[300px]">
-                        <ResponsiveContainer width="100%" height="100%" className="cursor-pointer">
-                            <BarChart data={stats.monthlyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart style={{ outline: 'none' }} data={stats.monthlyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                 <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} dy={10} />
                                 <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} dx={-10} allowDecimals={false} />
                                 <RechartsTooltip cursor={false} contentStyle={{ backgroundColor: '#1E293B', border: 'none', borderRadius: '12px', color: '#fff', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)' }} itemStyle={{ color: '#818CF8' }} />
@@ -276,11 +276,12 @@ const Dashboard = () => {
 
                 <div className="bg-white dark:bg-[#0B0F19]/80 backdrop-blur-sm p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-[#1E293B] shadow-lg shadow-slate-200/50 dark:shadow-xl min-h-[400px] flex flex-col transition-colors z-0">
                     <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-6">Lead Status Distribution</h3>
-                    <div className="flex-1 w-full h-full min-h-[300px] flex items-center justify-center cursor-pointer">
+                    <div className="flex-1 w-full h-full min-h-[300px] flex items-center justify-center">
                         {stats.statusData && stats.statusData.length > 0 ? (
-                            <ResponsiveContainer width="100%" height="100%" className="cursor-pointer">
-                                <PieChart>
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart style={{ outline: 'none' }}>
                                     <Pie
+                                        style={{ outline: 'none' }}
                                         data={stats.statusData}
                                         cx="50%"
                                         cy="50%"
@@ -292,6 +293,7 @@ const Dashboard = () => {
                                     >
                                         {stats.statusData.map((entry, index) => (
                                             <Cell
+                                                style={{ outline: 'none' }}
                                                 key={`cell-${index}`}
                                                 fill={entry.name === 'Lost Deal' ? '#F43F5E' : entry.name === 'Won Deal' ? '#10B981' : entry.name === 'Pending Deals' ? '#8B5CF6' : COLORS[index % COLORS.length]}
                                             />

@@ -195,7 +195,12 @@ const Dashboard = () => {
                 </div>
                 <div className="mt-4 md:mt-0 flex gap-4 relative">
                     {/* Generate Report Dropdown Wrapper */}
-                    <div className="relative" ref={reportDropdownRef}>
+                    <div
+                        className="relative"
+                        ref={reportDropdownRef}
+                        onMouseEnter={() => setReportMenuOpen(true)}
+                        onMouseLeave={() => setReportMenuOpen(false)}
+                    >
                         <button
                             onClick={() => setReportMenuOpen(!reportMenuOpen)}
                             className="flex items-center gap-2 px-6 py-2.5 bg-slate-100 dark:bg-[#1E293B] hover:bg-slate-200 dark:hover:bg-[#2A374C] text-slate-700 dark:text-slate-200 rounded-xl font-semibold transition-all duration-300 border border-slate-300 dark:border-slate-700/50 shadow-sm dark:shadow-md"
@@ -205,37 +210,41 @@ const Dashboard = () => {
 
                         {/* Dropdown Menu */}
                         {reportMenuOpen && (
-                            <div className="absolute top-full mt-2 w-48 right-0 bg-white dark:bg-[#0F1523] border border-slate-200 dark:border-[#1E293B] rounded-xl shadow-xl dark:shadow-[0_10px_40px_rgba(0,0,0,0.5)] overflow-hidden z-50 animate-in slide-in-from-top-2 duration-200">
-                                <button onClick={() => handleExport('PDF')} className="flex items-center w-full gap-3 px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-[#1E293B] text-slate-700 dark:text-slate-300 transition-colors">
-                                    <FileText className="w-4 h-4 text-rose-500" /> Export as PDF
-                                </button>
-                                <button onClick={() => handleExport('Excel')} className="flex items-center w-full gap-3 px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-[#1E293B] text-slate-700 dark:text-slate-300 transition-colors">
-                                    <FileSpreadsheet className="w-4 h-4 text-emerald-500" /> Export as Excel
-                                </button>
-                                <button onClick={() => handleExport('CSV')} className="flex items-center w-full gap-3 px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-[#1E293B] text-slate-700 dark:text-slate-300 transition-colors">
-                                    <Download className="w-4 h-4 text-blue-500" /> Export as CSV
-                                </button>
+                            <div className="absolute top-full right-0 z-50 w-48 pt-2">
+                                <div className="bg-white dark:bg-[#0F1523] border border-slate-200 dark:border-[#1E293B] rounded-xl shadow-xl dark:shadow-[0_10px_40px_rgba(0,0,0,0.5)] overflow-hidden animate-in slide-in-from-top-2 duration-200">
+                                    <button onClick={() => handleExport('PDF')} className="flex items-center w-full gap-3 px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-[#1E293B] text-slate-700 dark:text-slate-300 transition-colors">
+                                        <FileText className="w-4 h-4 text-rose-500" /> Export as PDF
+                                    </button>
+                                    <button onClick={() => handleExport('Excel')} className="flex items-center w-full gap-3 px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-[#1E293B] text-slate-700 dark:text-slate-300 transition-colors">
+                                        <FileSpreadsheet className="w-4 h-4 text-emerald-500" /> Export as Excel
+                                    </button>
+                                    <button onClick={() => handleExport('CSV')} className="flex items-center w-full gap-3 px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-[#1E293B] text-slate-700 dark:text-slate-300 transition-colors">
+                                        <Download className="w-4 h-4 text-blue-500" /> Export as CSV
+                                    </button>
+                                </div>
                             </div>
                         )}
                     </div>
                     {/* Date Filters */}
                     <div className="flex items-center gap-3 mr-4 border-r border-slate-200 dark:border-slate-700 pr-4">
-                        <select
+                        <CustomSelect
                             value={dateFilter}
+                            size="sm"
                             onChange={(e) => {
                                 setDateFilter(e.target.value);
                                 if (e.target.value !== 'Specific Date') setSpecificDate('');
                                 if (e.target.value !== 'Custom Range') { setStartDate(''); setEndDate(''); }
                             }}
-                            className="bg-slate-50 dark:bg-[#1E293B] border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-sm font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500"
-                        >
-                            <option value="All Time">All Time</option>
-                            <option value="Today">Today</option>
-                            <option value="Yesterday">Yesterday</option>
-                            <option value="Current Month">Current Month</option>
-                            <option value="Specific Date">Specific Date</option>
-                            <option value="Custom Range">Custom Range</option>
-                        </select>
+                            options={[
+                                { value: "All Time", label: "All Time" },
+                                { value: "Today", label: "Today" },
+                                { value: "Yesterday", label: "Yesterday" },
+                                { value: "Current Month", label: "Current Month" },
+                                { value: "Specific Date", label: "Specific Date" },
+                                { value: "Custom Range", label: "Custom Range" }
+                            ]}
+                            className="w-48"
+                        />
 
                         {dateFilter === 'Specific Date' && (
                             <input
@@ -358,8 +367,8 @@ const Dashboard = () => {
                 <div className="lg:col-span-2 bg-white dark:bg-[#0B0F19]/80 backdrop-blur-sm p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-[#1E293B] shadow-lg shadow-slate-200/50 dark:shadow-xl min-h-[400px] flex flex-col transition-colors z-0">
                     <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-6">Monthly Leads Activity (Histogram)</h3>
                     <div className="flex-1 w-full h-full min-h-[300px]">
-                        <ResponsiveContainer width="100%" height="100%" className="cursor-pointer">
-                            <BarChart data={stats.monthlyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart style={{ outline: 'none' }} data={stats.monthlyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                 <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} dy={10} />
                                 <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} dx={-10} allowDecimals={false} />
                                 <RechartsTooltip cursor={false} contentStyle={{ backgroundColor: '#1E293B', border: 'none', borderRadius: '12px', color: '#fff', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)' }} />
@@ -371,11 +380,12 @@ const Dashboard = () => {
 
                 <div className="bg-white dark:bg-[#0B0F19]/80 backdrop-blur-sm p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-[#1E293B] shadow-lg shadow-slate-200/50 dark:shadow-xl min-h-[400px] flex flex-col transition-colors z-0">
                     <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-6">Lead Status Distribution</h3>
-                    <div className="flex-1 w-full h-full min-h-[300px] flex items-center justify-center cursor-pointer">
+                    <div className="flex-1 w-full h-full min-h-[300px] flex items-center justify-center">
                         {stats.statusData && stats.statusData.length > 0 ? (
-                            <ResponsiveContainer width="100%" height="100%" className="cursor-pointer">
-                                <PieChart>
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart style={{ outline: 'none' }}>
                                     <Pie
+                                        style={{ outline: 'none' }}
                                         data={stats.statusData}
                                         cx="50%"
                                         cy="50%"
@@ -387,6 +397,7 @@ const Dashboard = () => {
                                     >
                                         {stats.statusData.map((entry, index) => (
                                             <Cell
+                                                style={{ outline: 'none' }}
                                                 key={`cell-${index}`}
                                                 fill={entry.name === 'Lost Deal' ? '#F43F5E' : entry.name === 'Won Deal' ? '#10B981' : entry.name === 'Pending Deals' ? '#8B5CF6' : COLORS[index % COLORS.length]}
                                             />
