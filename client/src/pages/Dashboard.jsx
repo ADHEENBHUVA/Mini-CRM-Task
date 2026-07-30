@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { jsPDF } from 'jspdf';
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { Link } from 'react-router-dom';
 import { Users, Briefcase, CalendarClock, TrendingUp, CheckCircle, Clock, ChevronDown, Download, FileText, FileSpreadsheet, XCircle } from 'lucide-react';
+import CustomSelect from '../components/CustomSelect';
 
 const COLORS = ['#818CF8', '#34D399', '#FBBF24', '#F472B6', '#A78BFA', '#38BDF8'];
 
@@ -19,12 +20,26 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
     const [reportMenuOpen, setReportMenuOpen] = useState(false);
     const [showFollowupPopup, setShowFollowupPopup] = useState(false);
+    const reportDropdownRef = useRef(null);
 
     // Date Filters
     const [dateFilter, setDateFilter] = useState('All Time');
     const [specificDate, setSpecificDate] = useState('');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
+
+    // Close report dropdown on click outside
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (reportDropdownRef.current && !reportDropdownRef.current.contains(e.target)) {
+                setReportMenuOpen(false);
+            }
+        };
+        if (reportMenuOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [reportMenuOpen]);
 
     const fetchStats = async () => {
         setLoading(true);
@@ -180,7 +195,7 @@ const Dashboard = () => {
                 </div>
                 <div className="mt-4 md:mt-0 flex gap-4 relative">
                     {/* Generate Report Dropdown Wrapper */}
-                    <div className="relative">
+                    <div className="relative" ref={reportDropdownRef}>
                         <button
                             onClick={() => setReportMenuOpen(!reportMenuOpen)}
                             className="flex items-center gap-2 px-6 py-2.5 bg-slate-100 dark:bg-[#1E293B] hover:bg-slate-200 dark:hover:bg-[#2A374C] text-slate-700 dark:text-slate-200 rounded-xl font-semibold transition-all duration-300 border border-slate-300 dark:border-slate-700/50 shadow-sm dark:shadow-md"
