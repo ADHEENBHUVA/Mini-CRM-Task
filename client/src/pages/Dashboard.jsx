@@ -15,7 +15,8 @@ const Dashboard = () => {
         wonDeals: 0,
         pendingLeads: 0,
         statusData: [],
-        monthlyData: []
+        monthlyData: [],
+        employeePerformance: []
     });
     const [loading, setLoading] = useState(true);
     const [reportMenuOpen, setReportMenuOpen] = useState(false);
@@ -283,10 +284,10 @@ const Dashboard = () => {
             </div>
 
             {/* KPI Cards */}
-            <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 transition-opacity duration-300 ${loading ? 'opacity-50' : 'opacity-100'}`}>
+            <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 transition-opacity duration-300 ${loading ? 'opacity-50' : 'opacity-100'}`}>
 
                 {/* Total Leads */}
-                <div className="bg-white dark:bg-gradient-to-br dark:from-[#1E293B] dark:to-[#0F172A] p-6 rounded-3xl border border-slate-200 dark:border-[#334155] shadow-lg shadow-slate-200/50 dark:shadow-xl hover:shadow-indigo-500/10 dark:hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-300 group">
+                <Link to="/leads" className="bg-white dark:bg-gradient-to-br dark:from-[#1E293B] dark:to-[#0F172A] p-6 rounded-3xl border border-slate-200 dark:border-[#334155] shadow-lg shadow-slate-200/50 dark:shadow-xl hover:shadow-indigo-500/10 dark:hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-300 group block">
                     <div className="flex justify-between items-start">
                         <div>
                             <p className="text-slate-500 dark:text-slate-400 font-semibold mb-1">Total Leads</p>
@@ -298,10 +299,10 @@ const Dashboard = () => {
                             <Users className="w-7 h-7 text-indigo-500 dark:text-indigo-400" />
                         </div>
                     </div>
-                </div>
+                </Link>
 
                 {/* Today's Follow-ups */}
-                <div className="bg-white dark:bg-gradient-to-br dark:from-[#1E293B] dark:to-[#0F172A] p-6 rounded-3xl border border-slate-200 dark:border-[#334155] shadow-lg shadow-slate-200/50 dark:shadow-xl hover:shadow-amber-500/10 dark:hover:shadow-amber-500/10 hover:-translate-y-1 transition-all duration-300 group">
+                <Link to="/followups" className="bg-white dark:bg-gradient-to-br dark:from-[#1E293B] dark:to-[#0F172A] p-6 rounded-3xl border border-slate-200 dark:border-[#334155] shadow-lg shadow-slate-200/50 dark:shadow-xl hover:shadow-amber-500/10 dark:hover:shadow-amber-500/10 hover:-translate-y-1 transition-all duration-300 group block">
                     <div className="flex justify-between items-start">
                         <div>
                             <p className="text-slate-500 dark:text-slate-400 font-semibold mb-1">Today's Follow-ups</p>
@@ -313,10 +314,25 @@ const Dashboard = () => {
                             <Clock className="w-7 h-7 text-amber-500 dark:text-amber-400" />
                         </div>
                     </div>
-                </div>
+                </Link>
+
+                {/* Overdue Follow-ups */}
+                <Link to="/followups" className="bg-white dark:bg-gradient-to-br dark:from-[#1E293B] dark:to-[#0F172A] p-6 rounded-3xl border border-slate-200 dark:border-[#334155] shadow-lg shadow-slate-200/50 dark:shadow-xl hover:shadow-red-500/10 dark:hover:shadow-red-500/10 hover:-translate-y-1 transition-all duration-300 group block">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p className="text-slate-500 dark:text-slate-400 font-semibold mb-1">Overdue Follow-ups</p>
+                            <h3 className="text-4xl font-bold text-slate-800 dark:text-white group-hover:text-red-500 dark:group-hover:text-red-400 transition-colors">
+                                {loading ? '...' : stats.overdueFollowups || 0}
+                            </h3>
+                        </div>
+                        <div className="p-3 bg-red-50 dark:bg-red-500/10 rounded-2xl">
+                            <Clock className="w-7 h-7 text-red-500 dark:text-red-400" />
+                        </div>
+                    </div>
+                </Link>
 
                 {/* Won Deals */}
-                <div className="bg-white dark:bg-gradient-to-br dark:from-[#1E293B] dark:to-[#0F172A] p-6 rounded-3xl border border-slate-200 dark:border-[#334155] shadow-lg shadow-slate-200/50 dark:shadow-xl hover:shadow-emerald-500/10 dark:hover:shadow-emerald-500/10 hover:-translate-y-1 transition-all duration-300 group">
+                <Link to="/leads" className="bg-white dark:bg-gradient-to-br dark:from-[#1E293B] dark:to-[#0F172A] p-6 rounded-3xl border border-slate-200 dark:border-[#334155] shadow-lg shadow-slate-200/50 dark:shadow-xl hover:shadow-emerald-500/10 dark:hover:shadow-emerald-500/10 hover:-translate-y-1 transition-all duration-300 group block">
                     <div className="flex justify-between items-start">
                         <div>
                             <p className="text-slate-500 dark:text-slate-400 font-semibold mb-1">Won Deals</p>
@@ -328,10 +344,10 @@ const Dashboard = () => {
                             <CheckCircle className="w-7 h-7 text-emerald-500 dark:text-emerald-400" />
                         </div>
                     </div>
-                </div>
+                </Link>
 
                 {/* Pending Leads */}
-                <div className="bg-white dark:bg-gradient-to-br dark:from-[#1E293B] dark:to-[#0F172A] p-6 rounded-3xl border border-slate-200 dark:border-[#334155] shadow-lg shadow-slate-200/50 dark:shadow-xl hover:shadow-purple-500/10 dark:hover:shadow-purple-500/10 hover:-translate-y-1 transition-all duration-300 group">
+                <Link to="/leads" className="bg-white dark:bg-gradient-to-br dark:from-[#1E293B] dark:to-[#0F172A] p-6 rounded-3xl border border-slate-200 dark:border-[#334155] shadow-lg shadow-slate-200/50 dark:shadow-xl hover:shadow-purple-500/10 dark:hover:shadow-purple-500/10 hover:-translate-y-1 transition-all duration-300 group block">
                     <div className="flex justify-between items-start">
                         <div>
                             <p className="text-slate-500 dark:text-slate-400 font-semibold mb-1">Pending Leads</p>
@@ -343,10 +359,10 @@ const Dashboard = () => {
                             <TrendingUp className="w-7 h-7 text-purple-500 dark:text-purple-400" />
                         </div>
                     </div>
-                </div>
+                </Link>
 
                 {/* Lost Deals */}
-                <div className="bg-white dark:bg-gradient-to-br dark:from-[#1E293B] dark:to-[#0F172A] p-6 rounded-3xl border border-slate-200 dark:border-[#334155] shadow-lg shadow-slate-200/50 dark:shadow-xl hover:shadow-rose-500/10 dark:hover:shadow-rose-500/10 hover:-translate-y-1 transition-all duration-300 group">
+                <Link to="/leads?view=deleted" className="bg-white dark:bg-gradient-to-br dark:from-[#1E293B] dark:to-[#0F172A] p-6 rounded-3xl border border-slate-200 dark:border-[#334155] shadow-lg shadow-slate-200/50 dark:shadow-xl hover:shadow-rose-500/10 dark:hover:shadow-rose-500/10 hover:-translate-y-1 transition-all duration-300 group block">
                     <div className="flex justify-between items-start">
                         <div>
                             <p className="text-slate-500 dark:text-slate-400 font-semibold mb-1">Lost Deals</p>
@@ -358,7 +374,7 @@ const Dashboard = () => {
                             <XCircle className="w-7 h-7 text-rose-500 dark:text-rose-400" />
                         </div>
                     </div>
-                </div>
+                </Link>
 
             </div>
 
@@ -371,8 +387,8 @@ const Dashboard = () => {
                             <BarChart style={{ outline: 'none' }} data={stats.monthlyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                 <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} dy={10} />
                                 <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} dx={-10} allowDecimals={false} />
-                                <RechartsTooltip cursor={false} contentStyle={{ backgroundColor: '#1E293B', border: 'none', borderRadius: '12px', color: '#fff', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)' }} />
-                                <Bar dataKey="leads" fill="#818CF8" radius={[6, 6, 0, 0]} barSize={45} />
+                                <RechartsTooltip cursor={{ fill: 'transparent' }} contentStyle={{ backgroundColor: '#1E293B', border: 'none', borderRadius: '12px', color: '#fff', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)' }} />
+                                <Bar dataKey="leads" fill="#818CF8" radius={[6, 6, 0, 0]} barSize={45} style={{ cursor: 'pointer' }} />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
@@ -397,7 +413,7 @@ const Dashboard = () => {
                                     >
                                         {stats.statusData.map((entry, index) => (
                                             <Cell
-                                                style={{ outline: 'none' }}
+                                                style={{ outline: 'none', cursor: 'pointer' }}
                                                 key={`cell-${index}`}
                                                 fill={entry.name === 'Lost Deal' ? '#F43F5E' : entry.name === 'Won Deal' ? '#10B981' : entry.name === 'Pending Deals' ? '#8B5CF6' : COLORS[index % COLORS.length]}
                                             />
@@ -419,6 +435,28 @@ const Dashboard = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Employee Performance Chart (Admin Only) */}
+            {stats.employeePerformance && stats.employeePerformance.length > 0 && (
+                <div className="bg-white dark:bg-[#0B0F19]/80 backdrop-blur-sm p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-[#1E293B] shadow-lg shadow-slate-200/50 dark:shadow-xl min-h-[450px] flex flex-col transition-colors z-0">
+                    <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-6">Employee Performance (Won vs Lost Deals)</h3>
+                    <div className="w-full mt-4" style={{ height: "350px" }}>
+                        <ResponsiveContainer width="100%" height={350}>
+                            <BarChart style={{ outline: 'none' }} data={stats.employeePerformance} margin={{ top: 20, right: 30, left: -10, bottom: 0 }}>
+                                <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} dy={10} />
+                                <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} dx={-10} allowDecimals={false} />
+                                <RechartsTooltip
+                                    cursor={{ fill: 'rgba(148, 163, 184, 0.05)' }}
+                                    contentStyle={{ backgroundColor: '#1E293B', border: 'none', borderRadius: '12px', color: '#fff', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)' }}
+                                />
+                                <Legend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{ paddingBottom: '20px' }} />
+                                <Bar dataKey="won" name="Leads Won" fill="#10B981" radius={[6, 6, 0, 0]} barSize={40} style={{ cursor: 'pointer' }} />
+                                <Bar dataKey="lost" name="Leads Lost" fill="#F43F5E" radius={[6, 6, 0, 0]} barSize={40} style={{ cursor: 'pointer' }} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            )}
 
             {/* Follow-up Pop-up Modal removed for Master Admin. Followups are strictly employee tasks. */}
         </div>

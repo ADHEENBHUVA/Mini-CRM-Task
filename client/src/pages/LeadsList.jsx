@@ -132,17 +132,18 @@ const LeadsList = () => {
                                 <th className="px-6 py-4">Company</th>
                                 <th className="px-6 py-4">Status</th>
                                 <th className="px-6 py-4">Assigned To</th>
+                                <th className="px-6 py-4 text-center">Date Added</th>
                                 <th className="px-6 py-4 text-right">Action</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-[#1E293B]">
                             {loading ? (
                                 <tr>
-                                    <td colSpan="4" className="px-6 py-12 text-center text-slate-500 dark:text-slate-400">Loading leads...</td>
+                                    <td colSpan="6" className="px-6 py-12 text-center text-slate-500 dark:text-slate-400">Loading leads...</td>
                                 </tr>
                             ) : filteredLeads.length === 0 ? (
                                 <tr>
-                                    <td colSpan="4" className="px-6 py-12 text-center text-slate-500 dark:text-slate-400 flex flex-col items-center">
+                                    <td colSpan="6" className="px-6 py-12 text-center text-slate-500 dark:text-slate-400 flex flex-col items-center">
                                         <Briefcase className="w-12 h-12 mb-3 opacity-20" />
                                         No leads found. Create your first lead to begin!
                                     </td>
@@ -156,6 +157,16 @@ const LeadsList = () => {
                                         <td className="px-6 py-4 text-indigo-600 dark:text-indigo-400 font-semibold">{lead.status}</td>
                                         <td className="px-6 py-4 text-sm font-medium text-slate-700 dark:text-slate-300">
                                             {lead.assignedEmployee ? lead.assignedEmployee.name : <span className="text-slate-400 italic">Unassigned</span>}
+                                        </td>
+                                        <td className="px-6 py-4 text-center">
+                                            <div className="flex flex-col items-center">
+                                                <span className="text-[13px] font-bold text-slate-800 dark:text-slate-200 uppercase tracking-widest">
+                                                    {new Date(lead.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                                </span>
+                                                <span className="text-[11px] font-semibold text-indigo-500 dark:text-indigo-400 uppercase tracking-widest mt-0.5">
+                                                    {new Date(lead.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                                                </span>
+                                            </div>
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <div className="flex items-center justify-end gap-1.5 sm:gap-2">

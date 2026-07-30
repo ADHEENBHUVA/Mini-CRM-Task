@@ -69,8 +69,13 @@ const Followups = () => {
                                                 <p className="font-bold text-slate-900 dark:text-white">{f.lead?.companyName || 'Unknown Lead'}</p>
                                                 <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">{f.remarks}</p>
                                                 <p className={`text-xs font-bold mt-2 uppercase tracking-wide ${isPastDue ? 'text-rose-600 dark:text-rose-400' : 'text-indigo-600 dark:text-indigo-400'}`}>
-                                                    {isPastDue ? 'PAST DUE: ' : 'DUE: '} {new Date(f.followupDate).toLocaleString('en-GB')}
+                                                    {isPastDue ? 'PAST DUE: ' : 'DUE: '} {new Date(f.followupDate).toLocaleDateString('en-GB')} {f.followupTime && `- ${f.followupTime}`}
                                                 </p>
+                                                {f.nextFollowupDate && (
+                                                    <p className="text-xs font-bold mt-1 uppercase tracking-wide text-indigo-500">
+                                                        NEXT SCHEDULED: {new Date(f.nextFollowupDate).toLocaleString('en-GB')}
+                                                    </p>
+                                                )}
                                             </div>
                                         </div>
                                     </div>

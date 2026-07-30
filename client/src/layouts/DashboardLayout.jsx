@@ -8,6 +8,11 @@ import toast from 'react-hot-toast';
 const DashboardLayout = () => {
     const token = localStorage.getItem('token');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isCollapsed, setIsCollapsed] = useState(localStorage.getItem('sidebarCollapsed') === 'true');
+
+    useEffect(() => {
+        localStorage.setItem('sidebarCollapsed', isCollapsed);
+    }, [isCollapsed]);
 
     // Theme State
     const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
@@ -54,9 +59,9 @@ const DashboardLayout = () => {
 
     return (
         <div className="flex h-screen bg-slate-50 dark:bg-[#070A11] overflow-hidden font-sans text-slate-800 dark:text-slate-200 transition-colors duration-300">
-            <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} theme={theme} />
+            <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} theme={theme} />
 
-            <div className="flex-1 flex flex-col relative z-0 w-full transition-all duration-300 md:ml-64">
+            <div className={`flex-1 flex flex-col relative z-0 w-full transition-all duration-300 ${isCollapsed ? 'md:ml-20' : 'md:ml-64'}`}>
                 <Navbar onMenuClick={() => setIsSidebarOpen(true)} theme={theme} setTheme={setTheme} />
                 <main className="flex-1 overflow-x-hidden overflow-y-auto w-full p-4 md:p-8 pb-24">
                     <Outlet />
@@ -64,7 +69,7 @@ const DashboardLayout = () => {
 
                 {/* Background ambient glow effect */}
                 <div className="fixed top-0 right-0 w-[400px] md:w-[800px] h-[400px] md:h-[800px] bg-indigo-200/40 dark:bg-indigo-600/5 rounded-full blur-[80px] md:blur-[120px] pointer-events-none -z-10 translate-x-1/3 -translate-y-1/3 transition-colors duration-1000"></div>
-                <div className="fixed bottom-0 left-0 md:left-64 w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-purple-200/30 dark:bg-purple-600/5 rounded-full blur-[60px] md:blur-[100px] pointer-events-none -z-10 -translate-x-1/4 translate-y-1/4 transition-colors duration-1000"></div>
+                <div className={`fixed bottom-0 left-0 ${isCollapsed ? 'md:left-20' : 'md:left-64'} w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-purple-200/30 dark:bg-purple-600/5 rounded-full blur-[60px] md:blur-[100px] pointer-events-none -z-10 -translate-x-1/4 translate-y-1/4 transition-colors duration-1000`}></div>
             </div>
 
             {/* Mobile Overlay */}

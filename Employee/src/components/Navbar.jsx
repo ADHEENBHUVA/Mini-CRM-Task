@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Search, UserCircle, Menu, Sun, Moon, AlertCircle } from 'lucide-react';
+import { Bell, Search, UserCircle, Menu, Sun, Moon, AlertCircle, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 
@@ -8,6 +8,19 @@ const Navbar = ({ onMenuClick, theme, setTheme }) => {
 
     const [dueFollowups, setDueFollowups] = useState(0);
     const [showNotifications, setShowNotifications] = useState(false);
+
+    // Live Clock State
+    const [currentTime, setCurrentTime] = useState(new Date());
+    const [use24Hour, setUse24Hour] = useState(false);
+
+    useEffect(() => {
+        const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    // Format Date and Time
+    const formattedDate = currentTime.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    const formattedTime = currentTime.toLocaleTimeString('en-US', { hour12: !use24Hour, hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
     useEffect(() => {
         const fetchNotifications = async () => {
@@ -43,7 +56,26 @@ const Navbar = ({ onMenuClick, theme, setTheme }) => {
                 </div>
 
                 {/* Right Side */}
-                <div className="flex items-center gap-3 md:gap-6 ml-4">
+                <div className="flex items-center gap-2 md:gap-4 ml-4">
+
+                    {/* Live Clock Component */}
+                    <div className="hidden lg:flex items-center gap-3 bg-slate-100/80 dark:bg-[#1E293B]/80 px-4 py-1.5 rounded-[14px] border border-slate-200 dark:border-slate-700/50 transition-colors shadow-sm">
+                        <div className="text-right">
+                            <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-none mb-0.5">{formattedDate}</p>
+                            <p className="text-[15px] font-extrabold text-slate-800 dark:text-slate-200 leading-none">
+                                {formattedTime}
+                            </p>
+                        </div>
+                        <div className="h-6 w-[1px] bg-slate-300 dark:bg-slate-600 mx-1"></div>
+                        <button
+                            onClick={() => setUse24Hour(!use24Hour)}
+                            className="p-1.5 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-[#0F1523] rounded-lg transition-all shadow-sm active:scale-95"
+                            title={`Switch to ${use24Hour ? '12-hour' : '24-hour'} format`}
+                        >
+                            <Clock className="w-[18px] h-[18px]" />
+                        </button>
+                    </div>
+
                     {/* Theme Toggle */}
                     <button
                         onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}

@@ -15,6 +15,8 @@ const LeadDetails = () => {
 
     const [noteInput, setNoteInput] = useState('');
     const [followupDate, setFollowupDate] = useState('');
+    const [followupTime, setFollowupTime] = useState('');
+    const [nextFollowupDate, setNextFollowupDate] = useState('');
     const [remarks, setRemarks] = useState('');
 
     // Employee Assignment for Followups
@@ -97,14 +99,18 @@ const LeadDetails = () => {
         try {
             const token = localStorage.getItem('token');
             const payload = { followupDate, remarks };
+            if (followupTime) payload.followupTime = followupTime;
             if (isAdmin && selectedEmployee) {
                 payload.employeeId = selectedEmployee;
             }
+            if (nextFollowupDate) payload.nextFollowupDate = nextFollowupDate;
 
             await axios.post(`http://localhost:5000/api/leads/${id}/followups`, payload, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setFollowupDate('');
+            setFollowupTime('');
+            setNextFollowupDate('');
             setRemarks('');
             fetchLeadData();
         } catch (error) {
@@ -181,59 +187,69 @@ const LeadDetails = () => {
                         <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2">
                             <Calendar className="w-5 h-5 text-indigo-500" /> Schedule Activity / Follow-up
                         </h3>
-                        <form onSubmit={handleAddFollowup} className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                            <div className="md:col-span-3">
-                                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 ml-1 uppercase">Date</label>
-                                <input required type="datetime-local" value={followupDate} onChange={(e) => setFollowupDate(e.target.value)} className="w-full px-4 py-3 bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-[#2A374C] rounded-xl text-slate-900 dark:text-white focus:ring-1 focus:ring-indigo-500 outline-none" />
+                        <form onSubmit={handleAddFollowup} className="flex flex-col gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                                <div>
+                                    <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1 ml-1 uppercase tracking-wider">Due Date</label>
+                                    <input required type="date" value={followupDate} onChange={(e) => setFollowupDate(e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-[#2A374C] rounded-xl text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all" />
+                                </div>
+                                <div>
+                                    <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1 ml-1 uppercase tracking-wider">Due Time</label>
+                                    <input type="time" value={followupTime} onChange={(e) => setFollowupTime(e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-[#2A374C] rounded-xl text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all" />
+                                </div>
+                                <div>
+                                    <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1 ml-1 uppercase tracking-wider">Next Date (Opt)</label>
+                                    <input type="date" value={nextFollowupDate} onChange={(e) => setNextFollowupDate(e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-[#2A374C] rounded-xl text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all" />
+                                </div>
+
+                                {isAdmin && (
+                                    <div className="relative">
+                                        <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1 ml-1 uppercase tracking-wider">Assign Employee</label>
+                                        <div className="relative group">
+                                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                <User className="h-4 w-4 text-slate-400 group-focus-within:text-indigo-500" />
+                                            </div>
+                                            <input
+                                                type="text"
+                                                value={empSearch}
+                                                onChange={(e) => {
+                                                    setEmpSearch(e.target.value);
+                                                    if (selectedEmployee) setSelectedEmployee('');
+                                                    setShowEmpDropdown(true);
+                                                }}
+                                                onFocus={() => setShowEmpDropdown(true)}
+                                                onBlur={() => setTimeout(() => setShowEmpDropdown(false), 200)}
+                                                className="w-full pl-9 pr-4 py-2.5 bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-[#2A374C] rounded-xl text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-colors text-sm"
+                                                placeholder="Search..."
+                                            />
+                                        </div>
+                                        {showEmpDropdown && (
+                                            <div className="absolute z-20 w-full mt-2 bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-[#2A374C] shadow-xl rounded-xl overflow-hidden max-h-48 overflow-y-auto">
+                                                {employees.filter(e => e.name.toLowerCase().includes(empSearch.toLowerCase())).map(emp => (
+                                                    <div
+                                                        key={emp._id}
+                                                        className="px-4 py-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-[#151D2C] text-slate-700 dark:text-slate-300 font-medium flex justify-between text-sm transition-colors"
+                                                        onClick={() => {
+                                                            setSelectedEmployee(emp._id);
+                                                            setEmpSearch(emp.name);
+                                                            setShowEmpDropdown(false);
+                                                        }}
+                                                    >
+                                                        <span>{emp.name}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
 
-                            {isAdmin && (
-                                <div className="md:col-span-3 relative">
-                                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 ml-1 uppercase">Assign Employee</label>
-                                    <div className="relative group">
-                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <User className="h-4 w-4 text-slate-400 group-focus-within:text-indigo-500" />
-                                        </div>
-                                        <input
-                                            type="text"
-                                            value={empSearch}
-                                            onChange={(e) => {
-                                                setEmpSearch(e.target.value);
-                                                if (selectedEmployee) setSelectedEmployee('');
-                                                setShowEmpDropdown(true);
-                                            }}
-                                            onFocus={() => setShowEmpDropdown(true)}
-                                            onBlur={() => setTimeout(() => setShowEmpDropdown(false), 200)}
-                                            className="w-full pl-9 pr-4 py-3 bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-[#2A374C] rounded-xl text-slate-900 dark:text-white focus:ring-1 focus:ring-indigo-500 outline-none transition-colors"
-                                            placeholder="Search Employee..."
-                                        />
-                                    </div>
-                                    {showEmpDropdown && (
-                                        <div className="absolute z-20 w-full mt-2 bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-[#2A374C] shadow-xl rounded-xl overflow-hidden max-h-48 overflow-y-auto">
-                                            {employees.filter(e => e.name.toLowerCase().includes(empSearch.toLowerCase())).map(emp => (
-                                                <div
-                                                    key={emp._id}
-                                                    className="px-4 py-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-[#151D2C] text-slate-700 dark:text-slate-300 font-medium flex justify-between text-sm"
-                                                    onClick={() => {
-                                                        setSelectedEmployee(emp._id);
-                                                        setEmpSearch(emp.name);
-                                                        setShowEmpDropdown(false);
-                                                    }}
-                                                >
-                                                    <span>{emp.name}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            <div className={isAdmin ? "md:col-span-6" : "md:col-span-9"}>
-                                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 ml-1 uppercase">Objective / Remarks</label>
-                                <div className="flex gap-2">
-                                    <input type="text" value={remarks} onChange={(e) => setRemarks(e.target.value)} placeholder="E.g. Call to discuss proposal..." className="flex-1 px-4 py-3 bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-[#2A374C] rounded-xl text-slate-900 dark:text-white focus:ring-1 focus:ring-indigo-500 outline-none" />
-                                    <button type="submit" className="px-5 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold shadow-[0_4px_15px_rgba(79,70,229,0.3)] transition-all flex items-center justify-center shrink-0">
-                                        Schedule
+                            <div>
+                                <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1 ml-1 uppercase tracking-wider">Objective / Remarks</label>
+                                <div className="flex flex-col sm:flex-row gap-3">
+                                    <input type="text" value={remarks} onChange={(e) => setRemarks(e.target.value)} placeholder="E.g. Call to discuss proposal..." className="flex-1 px-4 py-3 bg-slate-50 dark:bg-[#0F1523] border border-slate-200 dark:border-[#2A374C] rounded-xl text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all" />
+                                    <button type="submit" className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold tracking-wide shadow-[0_4px_15px_rgba(79,70,229,0.3)] hover:shadow-[0_6px_20px_rgba(79,70,229,0.4)] transition-all flex items-center justify-center shrink-0">
+                                        Schedule Activity
                                     </button>
                                 </div>
                             </div>
@@ -253,7 +269,7 @@ const LeadDetails = () => {
                                     <div key={f._id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 rounded-2xl border border-indigo-100 dark:border-indigo-500/20 bg-indigo-50/50 dark:bg-indigo-500/5 group transition-colors">
                                         <div>
                                             <p className="font-bold text-indigo-900 dark:text-indigo-300">{f.remarks || 'Standard Lead Follow-up'}</p>
-                                            <p className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 mt-1 uppercase tracking-wider">{new Date(f.followupDate).toLocaleString('en-GB')}</p>
+                                            <p className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 mt-1 uppercase tracking-wider">{new Date(f.followupDate).toLocaleDateString('en-GB')} {f.followupTime && `- ${f.followupTime}`}</p>
                                         </div>
                                         <button onClick={() => markFollowupComplete(f._id)} className="mt-3 sm:mt-0 flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#1E293B] text-indigo-600 dark:text-indigo-400 hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-500 dark:hover:text-white border border-indigo-200 dark:border-indigo-500/30 rounded-lg text-sm font-bold transition-all shadow-sm">
                                             <CheckCircle className="w-4 h-4" /> Mark Done

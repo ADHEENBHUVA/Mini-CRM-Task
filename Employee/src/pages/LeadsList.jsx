@@ -60,17 +60,18 @@ const LeadsList = () => {
                                 <th className="px-6 py-4">Client Name</th>
                                 <th className="px-6 py-4">Company</th>
                                 <th className="px-6 py-4">Status</th>
+                                <th className="px-6 py-4 text-center">Date Added</th>
                                 <th className="px-6 py-4 text-right">Action</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-[#1E293B]">
                             {loading ? (
                                 <tr>
-                                    <td colSpan="4" className="px-6 py-12 text-center text-slate-500 dark:text-slate-400">Loading leads...</td>
+                                    <td colSpan="5" className="px-6 py-12 text-center text-slate-500 dark:text-slate-400">Loading leads...</td>
                                 </tr>
                             ) : leads.length === 0 ? (
                                 <tr>
-                                    <td colSpan="4" className="px-6 py-12 text-center text-slate-500 dark:text-slate-400 flex flex-col items-center">
+                                    <td colSpan="5" className="px-6 py-12 text-center text-slate-500 dark:text-slate-400 flex flex-col items-center">
                                         <Briefcase className="w-12 h-12 mb-3 opacity-20" />
                                         No leads found. Create your first lead to begin!
                                     </td>
@@ -83,6 +84,16 @@ const LeadsList = () => {
                                     <td className="px-6 py-4 font-bold text-slate-900 dark:text-white">{lead.contactPerson}</td>
                                     <td className="px-6 py-4 font-medium text-slate-700 dark:text-slate-300">{lead.companyName}</td>
                                     <td className="px-6 py-4 text-indigo-600 dark:text-indigo-400 font-semibold">{lead.status}</td>
+                                    <td className="px-6 py-4 text-center">
+                                        <div className="flex flex-col items-center">
+                                            <span className="text-[13px] font-bold text-slate-800 dark:text-slate-200 uppercase tracking-widest">
+                                                {new Date(lead.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                            </span>
+                                            <span className="text-[11px] font-semibold text-indigo-500 dark:text-indigo-400 uppercase tracking-widest mt-0.5">
+                                                {new Date(lead.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                                            </span>
+                                        </div>
+                                    </td>
                                     <td className="px-6 py-4 text-right">
                                         <Link to={`/leads/${lead._id}`} onClick={(e) => e.stopPropagation()} className="inline-block p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-[#1E293B] rounded-lg transition-colors">
                                             <ExternalLink className="w-5 h-5" />

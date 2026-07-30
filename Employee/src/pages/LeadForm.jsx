@@ -170,6 +170,55 @@ const LeadForm = () => {
                                 <option>Proposal Sent</option>
                             </select>
                         </div>
+
+                        <div className="relative">
+                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Assign Employee</label>
+                            <div className="relative group">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <Users className="h-5 w-5 text-slate-400 group-focus-within:text-indigo-500 dropdown" />
+                                </div>
+                                <input
+                                    type="text"
+                                    value={empSearch}
+                                    onChange={(e) => {
+                                        setEmpSearch(e.target.value);
+                                        if (formData.assignedEmployee) setFormData({ ...formData, assignedEmployee: '' });
+                                        setShowEmpDropdown(true);
+                                    }}
+                                    onFocus={() => setShowEmpDropdown(true)}
+                                    className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-[#151D2C] border border-slate-200 dark:border-[#2A374C] rounded-xl text-slate-900 dark:text-white focus:ring-1 focus:ring-indigo-500 outline-none transition-colors"
+                                    placeholder="Type to search employee..."
+                                />
+                            </div>
+
+                            {showEmpDropdown && (
+                                <>
+                                    <div className="fixed inset-0 z-10" onClick={() => setShowEmpDropdown(false)}></div>
+                                    <div className="absolute z-20 w-full mt-2 bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-[#2A374C] shadow-xl rounded-xl overflow-hidden max-h-48 overflow-y-auto">
+                                        <div
+                                            className="px-4 py-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-[#151D2C] text-slate-700 dark:text-slate-300 font-medium border-b border-slate-100 dark:border-[#2A374C]"
+                                            onClick={() => { setFormData({ ...formData, assignedEmployee: '' }); setEmpSearch('-- Unassigned --'); setShowEmpDropdown(false); }}
+                                        >
+                                            -- Unassigned --
+                                        </div>
+                                        {employees.filter(e => e.name.toLowerCase().includes(empSearch.replace('-- Unassigned --', '').toLowerCase())).map(emp => (
+                                            <div
+                                                key={emp._id}
+                                                className="px-4 py-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-[#151D2C] text-slate-700 dark:text-slate-300 font-medium flex justify-between"
+                                                onClick={() => {
+                                                    setFormData({ ...formData, assignedEmployee: emp._id });
+                                                    setEmpSearch(emp.name);
+                                                    setShowEmpDropdown(false);
+                                                }}
+                                            >
+                                                <span>{emp.name}</span>
+                                                <span className="text-xs bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400 px-2 py-1 rounded-md">{emp.role}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </>
+                            )}
+                        </div>
                     </div>
                 </div>
 

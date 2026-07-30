@@ -61,6 +61,7 @@ exports.getDashboardStats = async (req, res) => {
         const completedFollowups = await Followup.countDocuments({ ...followupQuery, status: 'Completed' });
         const pendingFollowups = await Followup.countDocuments({ ...followupQuery, status: 'Pending' });
         const dueFollowups = await Followup.countDocuments({ ...followupQuery, status: 'Due Follow-up' });
+        const overdueFollowups = await Followup.countDocuments({ ...followupQuery, followupDate: { $lt: today }, status: { $in: ['Pending', 'Due Follow-up'] } });
 
         let activeEmployees = 0;
         let inactiveEmployees = 0;
@@ -123,16 +124,60 @@ exports.getDashboardStats = async (req, res) => {
             });
         }
 
-        res.json({
+        // Add Employee Performance aggregation
+        let employeePerformance = [];
+        if (isAdmin) {
+            employeePerformance = await Lead.aggregate([
+                { $match: { isDeleted: { $ne: true }, assignedEmployee: { $ne: null } } },
+                {
+                    $group: {
+                        _id: '$assignedEmployee',
+                        won: { $sum: { $cond: [{ $eq: ['$result', 'Lead Won'] }, 1, 0] } },
+                        lost: { $sum: { $cond: [{ $eq: ['$result', 'Lead Loss'] }, 1, 0] } }
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'employees',
+                        localField: '_id',
+                        foreignField: '_id',
+                        as: 'employee'
+                    }
+                },
+                { $unwind: '$employee' },
+                {
+                    $project: {
+                        name: '$employee.name',
+                        won: 1,
+                        lost: 1,
+                        _id: 0
+                    }
+                }
+            ]);
+        }
+
+        return res.status(200).json({
             ok: true,
             data: {
-                totalLeads, assignedLeads, pendingLeads, todaysLeads,
-                wonDeals, lostDeals,
-                todaysFollowups, completedFollowups, pendingFollowups, dueFollowups,
-                activeEmployees, inactiveEmployees,
-                winRate, lossRate, conversionRate,
+                totalLeads,
+                assignedLeads,
+                wonDeals,
+                lostDeals,
+                pendingLeads,
+                todaysLeads,
+                todaysFollowups,
+                completedFollowups,
+                pendingFollowups,
+                dueFollowups,
+                overdueFollowups,
+                activeEmployees,
+                inactiveEmployees,
+                winRate,
+                lossRate,
+                conversionRate,
                 statusData: formattedStatusData,
-                monthlyData: monthlyData
+                monthlyData,
+                employeePerformance
             }
         });
     } catch (error) {
