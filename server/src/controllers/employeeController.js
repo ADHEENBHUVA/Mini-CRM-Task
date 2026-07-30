@@ -48,7 +48,7 @@ const getEmployeeById = async (req, res, next) => {
 
 const createEmployee = async (req, res, next) => {
     try {
-        const { name, email, phone, role, department, password, status } = req.body;
+        const { name, email, phone, role, department, password, status, avatar } = req.body;
 
         const exists = await Employee.findOne({ email });
         if (exists) {
@@ -57,7 +57,7 @@ const createEmployee = async (req, res, next) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
         const employee = new Employee({
-            name, email, phone, role, department, password: hashedPassword, status
+            name, email, phone, role, department, password: hashedPassword, status, avatar: avatar || ''
         });
 
         await employee.save();
@@ -69,12 +69,13 @@ const createEmployee = async (req, res, next) => {
 
 const updateEmployee = async (req, res, next) => {
     try {
-        const { name, email, phone, role, department, status, password } = req.body;
+        const { name, email, phone, role, department, status, password, avatar } = req.body;
 
         let updateFields = {};
         if (name) updateFields.name = name;
         if (email) updateFields.email = email;
         if (phone) updateFields.phone = phone;
+        if (avatar !== undefined) updateFields.avatar = avatar;
 
         // Only admins can change role, department, and status
         if (req.user && (req.user.role === 'Admin' || req.user.role === 'Master Admin')) {

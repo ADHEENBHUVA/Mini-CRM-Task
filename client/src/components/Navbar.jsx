@@ -4,7 +4,15 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 
 const Navbar = ({ onMenuClick, theme, setTheme }) => {
-    const user = JSON.parse(localStorage.getItem('user')) || { name: 'Admin User', role: 'Superadmin' };
+    const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')) || { name: 'Admin User', role: 'Superadmin' });
+
+    useEffect(() => {
+        const handleStorageChange = () => {
+            setUser(JSON.parse(localStorage.getItem('user')) || { name: 'Admin User', role: 'Superadmin' });
+        };
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, []);
 
     const [dueFollowups, setDueFollowups] = useState(0);
     const [showNotifications, setShowNotifications] = useState(false);
@@ -58,21 +66,23 @@ const Navbar = ({ onMenuClick, theme, setTheme }) => {
                 {/* Right Side */}
                 <div className="flex items-center gap-2 md:gap-4 ml-4">
 
-                    {/* Live Clock Component */}
-                    <div className="hidden lg:flex items-center gap-3 bg-slate-100/80 dark:bg-[#1E293B]/80 px-4 py-1.5 rounded-[14px] border border-slate-200 dark:border-slate-700/50 transition-colors shadow-sm">
-                        <div className="text-right">
-                            <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-none mb-0.5">{formattedDate}</p>
-                            <p className="text-[15px] font-extrabold text-slate-800 dark:text-slate-200 leading-none">
+                    {/* Premium Live Clock Component */}
+                    <div className="hidden lg:flex items-center gap-3 pl-4 pr-1.5 py-1.5 bg-gradient-to-r from-transparent via-slate-50 to-white dark:via-[#0F1523] dark:to-[#151D2C] rounded-[16px] border border-slate-200/60 dark:border-slate-700/50 shadow-sm transition-all group/clock hover:shadow-md">
+                        <div className="flex flex-col items-end justify-center">
+                            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em] leading-none mb-1">
+                                {formattedDate}
+                            </span>
+                            <span className="text-base font-black text-slate-800 dark:text-slate-100 leading-none tracking-tight">
                                 {formattedTime}
-                            </p>
+                            </span>
                         </div>
-                        <div className="h-6 w-[1px] bg-slate-300 dark:bg-slate-600 mx-1"></div>
+                        <div className="mx-0.5 h-8 w-[1px] bg-gradient-to-b from-transparent via-slate-300 dark:via-slate-600 to-transparent"></div>
                         <button
                             onClick={() => setUse24Hour(!use24Hour)}
-                            className="p-1.5 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-[#0F1523] rounded-lg transition-all shadow-sm active:scale-95"
+                            className="p-2 text-slate-400 hover:text-indigo-600 dark:text-slate-500 dark:hover:text-indigo-400 bg-slate-50 hover:bg-indigo-50 dark:bg-[#1E293B] dark:hover:bg-indigo-500/10 rounded-xl transition-all shadow-sm active:scale-95 group relative"
                             title={`Switch to ${use24Hour ? '12-hour' : '24-hour'} format`}
                         >
-                            <Clock className="w-[18px] h-[18px]" />
+                            <Clock className="w-[18px] h-[18px] group-hover:rotate-12 transition-transform duration-300" strokeWidth={2.5} />
                         </button>
                     </div>
 
@@ -126,15 +136,19 @@ const Navbar = ({ onMenuClick, theme, setTheme }) => {
                     {/* User Profile */}
                     <Link to="/profile" className="flex items-center gap-4 cursor-pointer group p-1.5 pr-3 hover:bg-slate-100 dark:hover:bg-[#1E293B] rounded-full transition-all duration-300">
                         <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-500 p-0.5 shadow-lg shadow-indigo-500/20 group-hover:shadow-indigo-500/40">
-                            <div className="w-full h-full rounded-full bg-slate-50 dark:bg-[#151D2C] flex items-center justify-center text-sm font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-widest">
-                                {(() => {
-                                    const name = user.name || user.email || 'Admin';
-                                    const parts = name.trim().split(/\s+/);
-                                    if (parts.length > 1) {
-                                        return (parts[0][0] + parts[1][0]).substring(0, 2);
-                                    }
-                                    return name.substring(0, 2);
-                                })()}
+                            <div className="w-full h-full rounded-full bg-slate-50 dark:bg-[#151D2C] flex items-center justify-center text-sm font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-widest overflow-hidden">
+                                {user.avatar ? (
+                                    <img src={user.avatar} alt="Profile" className="w-full h-full object-cover" />
+                                ) : (
+                                    (() => {
+                                        const name = user.name || user.email || 'Admin';
+                                        const parts = name.trim().split(/\s+/);
+                                        if (parts.length > 1) {
+                                            return (parts[0][0] + parts[1][0]).substring(0, 2);
+                                        }
+                                        return name.substring(0, 2);
+                                    })()
+                                )}
                             </div>
                         </div>
                         <div className="hidden sm:block text-left">

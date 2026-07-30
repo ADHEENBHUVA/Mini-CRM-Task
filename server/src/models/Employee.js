@@ -10,6 +10,10 @@ const EmployeeSchema = new mongoose.Schema({
         required: true,
         unique: true
     },
+    avatar: {
+        type: String, // Stores base64 string
+        default: ''
+    },
     phone: {
         type: String,
         required: true,

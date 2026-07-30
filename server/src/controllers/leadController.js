@@ -180,7 +180,7 @@ const getLeadDetails = async (req, res, next) => {
         const Comment = require('../models/Comment');
 
         const notes = await Note.find({ lead: lead._id }).populate('createdBy', 'name role').sort({ createdAt: 1 });
-        const followups = await Followup.find({ lead: lead._id }).sort({ followupDate: 1 });
+        const followups = await Followup.find({ lead: lead._id, isDeleted: false }).sort({ followupDate: 1 });
         const winLossComment = await Comment.findOne({ lead: lead._id, type: 'Win/Loss Reason' }).sort({ createdAt: -1 });
 
         res.json({ lead, notes, followups, winLossComment });
@@ -225,7 +225,7 @@ const addFollowup = async (req, res, next) => {
         }
 
         const Followup = require('../models/Followup');
-        const { followupDate, followupTime, customerResponse, remarks, nextFollowupDate, employeeId } = req.body;
+        const { followupDate, followupTime, customerResponse, remarks, nextFollowupDate, nextFollowupTime, employeeId } = req.body;
 
         let targetEmployee = req.user.id;
         if (req.user.role === 'Admin' || req.user.role === 'Master Admin') {
@@ -239,7 +239,8 @@ const addFollowup = async (req, res, next) => {
             followupTime,
             customerResponse,
             remarks,
-            nextFollowupDate
+            nextFollowupDate,
+            nextFollowupTime
         });
         await newFollowup.save();
         res.status(201).json({ message: 'Followup scheduled successfully', followup: newFollowup });
@@ -253,6 +254,11 @@ const markFollowupCompleted = async (req, res, next) => {
         const Followup = require('../models/Followup');
         const followup = await Followup.findById(req.params.followupId);
         if (!followup) return res.status(404).json({ message: 'Not found' });
+
+        if (req.body.customerResponse) {
+            followup.customerResponse = req.body.customerResponse;
+        }
+
         followup.status = 'Completed';
         await followup.save();
         res.json({ message: 'Followup completed', followup });

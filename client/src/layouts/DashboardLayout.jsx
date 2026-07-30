@@ -36,6 +36,7 @@ const DashboardLayout = () => {
                 });
                 if (res.data.count > 0) {
                     toast(`You have ${res.data.count} Past-Due Followup${res.data.count > 1 ? 's' : ''}!`, {
+                        id: 'past-due-toast',
                         icon: '⚠️',
                         style: {
                             borderRadius: '10px',

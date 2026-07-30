@@ -19,6 +19,8 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
     const [reportMenuOpen, setReportMenuOpen] = useState(false);
     const [showFollowupPopup, setShowFollowupPopup] = useState(false);
+    const [recentLeads, setRecentLeads] = useState([]);
+    const [dueFollowups, setDueFollowups] = useState([]);
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -56,6 +58,29 @@ const Dashboard = () => {
             }
         };
         fetchStats();
+    }, []);
+
+    useEffect(() => {
+        const fetchFooterWidgets = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) return;
+                const [rLeads, rFollowups] = await Promise.all([
+                    axios.get('http://localhost:5000/api/leads?viewDeleted=false', { headers: { Authorization: `Bearer ${token}` } }),
+                    axios.get('http://localhost:5000/api/followups', { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] }))
+                ]);
+
+                const sortedLeads = rLeads.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5);
+                setRecentLeads(sortedLeads);
+
+                const dList = rFollowups.data
+                    .filter(f => f.status !== 'Completed' && new Date(f.followupDate).setHours(0, 0, 0, 0) <= new Date().setHours(0, 0, 0, 0))
+                    .sort((a, b) => new Date(a.followupDate) - new Date(b.followupDate))
+                    .slice(0, 5);
+                setDueFollowups(dList);
+            } catch (e) { console.error("Footer widgets fetch failed"); }
+        };
+        fetchFooterWidgets();
     }, []);
 
     const handleExport = (type) => {
@@ -326,6 +351,95 @@ const Dashboard = () => {
                                 <CalendarClock className="w-12 h-12 text-slate-300 dark:text-slate-700" />
                                 <p>No Status Data Yet</p>
                             </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* Quick View Dashboard Footer Widgets */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-2 relative z-0">
+                {/* Recent Leads Box */}
+                <div className="bg-white dark:bg-[#0B0F19]/80 backdrop-blur-sm rounded-3xl border border-slate-200 dark:border-[#1E293B] shadow-lg shadow-slate-200/50 dark:shadow-xl p-6 transition-colors flex flex-col">
+                    <div className="flex justify-between items-center mb-6">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-indigo-50 dark:bg-indigo-500/10 rounded-xl">
+                                <Briefcase className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                            </div>
+                            <h3 className="text-lg font-bold text-slate-800 dark:text-white">Recent Leads</h3>
+                        </div>
+                        <Link to="/leads" className="text-xs font-bold px-4 py-2 bg-slate-100 dark:bg-[#1E293B] hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-indigo-500/10 dark:text-slate-300 dark:hover:text-indigo-400 rounded-lg transition-colors">
+                            View all
+                        </Link>
+                    </div>
+                    <div className="flex flex-col gap-3">
+                        {recentLeads.length === 0 ? (
+                            <p className="text-sm text-slate-500 py-4 text-center">No recent leads found.</p>
+                        ) : (
+                            recentLeads.map(lead => (
+                                <Link key={lead._id} to={`/leads/${lead._id}`} className="group flex items-center justify-between p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-[#151D2C] border border-transparent hover:border-slate-100 dark:hover:border-[#1E293B] transition-all">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-[#1E293B] flex items-center justify-center text-slate-500 dark:text-slate-400 text-sm font-bold uppercase group-hover:bg-indigo-50 group-hover:text-indigo-600 dark:group-hover:bg-indigo-500/20 dark:group-hover:text-indigo-400 transition-colors">
+                                            {lead.contactPerson?.charAt(0) || 'L'}
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold text-slate-800 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{lead.companyName}</p>
+                                            <p className="text-xs text-slate-500">{lead.priority} Priority</p>
+                                        </div>
+                                    </div>
+                                    <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">{lead.status}</span>
+                                </Link>
+                            ))
+                        )}
+                    </div>
+                </div>
+
+                {/* Due Followups Box */}
+                <div className="bg-white dark:bg-[#0B0F19]/80 backdrop-blur-sm rounded-3xl border border-slate-200 dark:border-[#1E293B] shadow-lg shadow-slate-200/50 dark:shadow-xl p-6 transition-colors flex flex-col">
+                    <div className="flex justify-between items-center mb-6">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-amber-50 dark:bg-amber-500/10 rounded-xl">
+                                <CalendarClock className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                            </div>
+                            <h3 className="text-lg font-bold text-slate-800 dark:text-white">Due Followups</h3>
+                        </div>
+                        <Link to="/followups" className="text-xs font-bold px-4 py-2 bg-slate-100 dark:bg-[#1E293B] hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-amber-500/10 dark:text-slate-300 dark:hover:text-amber-400 rounded-lg transition-colors">
+                            View all
+                        </Link>
+                    </div>
+                    <div className="flex flex-col gap-3">
+                        {dueFollowups.length === 0 ? (
+                            <p className="text-sm text-slate-500 py-4 text-center">No due followups!</p>
+                        ) : (
+                            dueFollowups.map(f => {
+                                let fTime = new Date(f.followupDate);
+                                if (f.followupTime) {
+                                    const [hrs, mins] = f.followupTime.split(':');
+                                    fTime.setHours(parseInt(hrs, 10), parseInt(mins, 10));
+                                } else {
+                                    fTime.setHours(23, 59, 59);
+                                }
+                                const isPastDue = fTime < new Date() && f.status !== 'Completed';
+
+                                return (
+                                    <div key={f._id} className={`group flex items-center justify-between p-3 rounded-2xl border transition-all ${isPastDue ? 'bg-rose-50/50 dark:bg-rose-500/5 hover:bg-rose-50 dark:hover:bg-rose-500/10 border-rose-100/50 dark:border-rose-500/20' : 'bg-amber-50/50 dark:bg-amber-500/5 hover:bg-amber-50 dark:hover:bg-amber-500/10 border-amber-100/50 dark:border-amber-500/20'}`}>
+                                        <div className="flex flex-col items-start gap-1">
+                                            <p className="text-sm font-bold text-slate-800 dark:text-slate-200 transition-colors truncate max-w-[200px]">
+                                                {f.lead?.companyName || 'Unknown Lead'}
+                                            </p>
+                                            <p className="text-xs text-slate-500 line-clamp-1 max-w-[200px]">{f.remarks || 'No remarks provided.'}</p>
+                                        </div>
+                                        <div className="flex flex-col items-end gap-1">
+                                            <span className={`text-[10px] font-extrabold uppercase tracking-widest ${isPastDue ? 'text-rose-600 dark:text-rose-400' : 'text-amber-600 dark:text-amber-400'}`}>
+                                                {isPastDue ? 'OVERDUE' : 'DUE TODAY'}
+                                            </span>
+                                            <span className="text-[10px] font-semibold text-slate-500 text-right">
+                                                {new Date(f.followupDate).toLocaleDateString('en-GB')}
+                                                {f.followupTime && <span className="block text-[9px] mt-0.5">{f.followupTime}</span>}
+                                            </span>
+                                        </div>
+                                    </div>
+                                );
+                            })
                         )}
                     </div>
                 </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, Mail, ShieldAlert, Key, Save, ShieldCheck, Eye, EyeOff } from 'lucide-react';
+import { User, Mail, ShieldAlert, Key, Save, ShieldCheck, Eye, EyeOff, Camera } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const Profile = () => {
@@ -13,6 +13,8 @@ const Profile = () => {
 
     const [user, setUser] = useState(storedUser);
     const [name, setName] = useState(user.name);
+    const [avatar, setAvatar] = useState(user.avatar || '');
+    const fileInputRef = React.useRef(null);
 
     // Password State
     const [oldPassword, setOldPassword] = useState('');
@@ -23,12 +25,51 @@ const Profile = () => {
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-    const handleProfileUpdate = (e) => {
+    const handleImageUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            if (file.size > 2 * 1024 * 1024) { // 2MB limit
+                toast.error('Image size must be less than 2MB');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setAvatar(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleProfileUpdate = async (e) => {
         e.preventDefault();
-        const updatedUser = { ...user, name };
-        localStorage.setItem('user', JSON.stringify(updatedUser));
-        setUser(updatedUser);
-        toast.success('Profile Updated Successfully!');
+        const updatedUser = { ...user, name, avatar };
+
+        try {
+            if (storedUser.role === 'Employee') {
+                const token = localStorage.getItem('token');
+                // We use axios explicitly injected or just fetch
+                const response = await fetch(`http://localhost:5000/api/employees/${storedUser.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ name, avatar })
+                });
+                if (!response.ok) throw new Error('API Update Failed');
+            }
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+            setUser(updatedUser);
+            // Dispatch a storage event so other tabs/components (like Navbar) can react to it immediately
+            window.dispatchEvent(new Event('storage'));
+            toast.success('Profile Updated Successfully!');
+        } catch (error) {
+            console.error(error);
+            toast.error('Failed to update profile to database. Saved locally.');
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+            setUser(updatedUser);
+            window.dispatchEvent(new Event('storage'));
+        }
     };
 
     const handlePasswordUpdate = (e) => {
@@ -67,6 +108,52 @@ const Profile = () => {
                     </div>
 
                     <form onSubmit={handleProfileUpdate} className="space-y-5">
+
+                        <div className="flex flex-col items-center sm:items-start gap-4 mb-2">
+                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">Profile Picture</label>
+                            <div className="flex items-center gap-6 w-full">
+                                <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                                    <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white dark:border-[#1E293B] shadow-lg bg-slate-100 dark:bg-[#151D2C] shrink-0 relative transition-transform group-hover:scale-105">
+                                        {avatar ? (
+                                            <img src={avatar} alt="Profile" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-bold text-3xl">
+                                                {name ? name.charAt(0).toUpperCase() : 'U'}
+                                            </div>
+                                        )}
+                                        {/* Hover Overlay */}
+                                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Camera className="text-white w-6 h-6" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className="px-4 py-2 bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#2A374C] transition-colors shadow-sm"
+                                    >
+                                        Change Picture
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setAvatar('')}
+                                        className="px-4 py-2 bg-transparent text-sm font-bold text-rose-500 hover:text-rose-600 transition-colors text-left"
+                                    >
+                                        Remove Avatar
+                                    </button>
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        className="hidden"
+                                        accept="image/png, image/jpeg, image/jpg"
+                                        onChange={handleImageUpload}
+                                    />
+                                    <p className="text-xs text-slate-400 font-medium">JPEG or PNG. Max 2MB.</p>
+                                </div>
+                            </div>
+                        </div>
+
                         <div>
                             <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5 hover:opacity-80 transition-opacity">Full Name</label>
                             <div className="relative group">

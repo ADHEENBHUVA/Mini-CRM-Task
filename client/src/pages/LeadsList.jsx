@@ -10,6 +10,7 @@ const LeadsList = () => {
     const [loading, setLoading] = useState(true);
     const [employees, setEmployees] = useState([]);
     const [selectedEmployee, setSelectedEmployee] = useState('');
+    const [selectedPriority, setSelectedPriority] = useState('');
     const [viewMode, setViewMode] = useState('Active');
     const navigate = useNavigate();
     const location = useLocation();
@@ -76,9 +77,15 @@ const LeadsList = () => {
     };
 
     const filteredLeads = leads.filter(lead => {
-        if (!selectedEmployee) return true;
-        const empId = typeof lead.assignedEmployee === 'object' ? lead.assignedEmployee?._id : lead.assignedEmployee;
-        return empId === selectedEmployee;
+        let match = true;
+        if (selectedEmployee) {
+            const empId = typeof lead.assignedEmployee === 'object' ? lead.assignedEmployee?._id : lead.assignedEmployee;
+            if (empId !== selectedEmployee) match = false;
+        }
+        if (selectedPriority) {
+            if (lead.priority !== selectedPriority) match = false;
+        }
+        return match;
     });
 
     return (
@@ -120,6 +127,22 @@ const LeadsList = () => {
                         ))}
                     </select>
                 </div>
+
+                <div className="flex items-center gap-3 w-full max-w-xs ring-1 ring-slate-200 dark:ring-slate-700/50 rounded-xl px-4 py-1.5 focus-within:ring-2 focus-within:ring-indigo-500/50 bg-slate-50 dark:bg-[#0F1523] transition-all">
+                    <svg className="w-5 h-5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                    </svg>
+                    <select
+                        value={selectedPriority}
+                        onChange={(e) => setSelectedPriority(e.target.value)}
+                        className="w-full bg-transparent border-none py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-0 appearance-none"
+                    >
+                        <option value="">All Priorities</option>
+                        <option value="High">🔴 High Priority</option>
+                        <option value="Medium">🟡 Medium Priority</option>
+                        <option value="Low">🟢 Low Priority</option>
+                    </select>
+                </div>
             </div>
 
             {/* Table */}
@@ -130,7 +153,7 @@ const LeadsList = () => {
                             <tr className="bg-slate-50 dark:bg-[#1E293B]/50 text-slate-500 dark:text-slate-400 text-xs sm:text-sm font-semibold uppercase tracking-wider transition-colors border-b border-slate-200 dark:border-[#1E293B]">
                                 <th className="px-6 py-4">Client Name</th>
                                 <th className="px-6 py-4">Company</th>
-                                <th className="px-6 py-4">Status</th>
+                                <th className="px-6 py-4">Status & Priority</th>
                                 <th className="px-6 py-4">Assigned To</th>
                                 <th className="px-6 py-4 text-center">Date Added</th>
                                 <th className="px-6 py-4 text-right">Action</th>
@@ -154,7 +177,19 @@ const LeadsList = () => {
                                     <tr key={lead._id} onClick={() => navigate(`/leads/${lead._id}`)} className="hover:bg-slate-50/80 dark:hover:bg-[#151D2C]/80 transition-colors group cursor-pointer">
                                         <td className="px-6 py-4 font-bold text-slate-900 dark:text-white">{lead.contactPerson}</td>
                                         <td className="px-6 py-4 font-medium text-slate-700 dark:text-slate-300">{lead.companyName}</td>
-                                        <td className="px-6 py-4 text-indigo-600 dark:text-indigo-400 font-semibold">{lead.status}</td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex flex-col gap-1 items-start">
+                                                <span className="text-indigo-600 dark:text-indigo-400 font-semibold">{lead.status}</span>
+                                                {lead.priority && (
+                                                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border ${lead.priority === 'High' ? 'bg-rose-50 border-rose-200 text-rose-600 dark:bg-rose-500/10 dark:border-rose-500/20 dark:text-rose-400' :
+                                                        lead.priority === 'Medium' ? 'bg-amber-50 border-amber-200 text-amber-600 dark:bg-amber-500/10 dark:border-amber-500/20 dark:text-amber-400' :
+                                                            'bg-emerald-50 border-emerald-200 text-emerald-600 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400'
+                                                        }`}>
+                                                        {lead.priority}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </td>
                                         <td className="px-6 py-4 text-sm font-medium text-slate-700 dark:text-slate-300">
                                             {lead.assignedEmployee ? lead.assignedEmployee.name : <span className="text-slate-400 italic">Unassigned</span>}
                                         </td>

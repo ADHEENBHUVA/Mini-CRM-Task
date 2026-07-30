@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { ArrowLeft, UserPlus, Lock, Mail, Phone, Briefcase, Building, Save, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, UserPlus, Lock, Mail, Phone, Briefcase, Building, Save, Eye, EyeOff, Camera } from 'lucide-react';
 
 const EmployeeForm = () => {
     const navigate = useNavigate();
@@ -20,8 +20,25 @@ const EmployeeForm = () => {
         role: 'Employee',
         department: 'Sales',
         password: '',
-        status: 'Active'
+        status: 'Active',
+        avatar: ''
     });
+
+    const fileInputRef = React.useRef(null);
+    const handleImageUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            if (file.size > 2 * 1024 * 1024) {
+                alert('Image size must be less than 2MB');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setFormData(prev => ({ ...prev, avatar: reader.result }));
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
     useEffect(() => {
         if (isEditMode) {
@@ -41,7 +58,8 @@ const EmployeeForm = () => {
                         role: emp.role || 'Employee',
                         department: emp.department || 'Sales',
                         password: '', // default empty for editing
-                        status: emp.status || 'Active'
+                        status: emp.status || 'Active',
+                        avatar: emp.avatar || ''
                     });
                 } catch (err) {
                     setError('Failed to fetch employee details');
@@ -122,10 +140,14 @@ const EmployeeForm = () => {
                     {/* Background decoration */}
                     <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-indigo-500/10 to-purple-500/5 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
 
-                    <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 p-1 shadow-lg shadow-indigo-500/30 shrink-0 z-10">
-                        <div className="w-full h-full rounded-full bg-white dark:bg-[#0B0F19] flex items-center justify-center text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-indigo-500 to-purple-600 uppercase">
-                            {formData.name.charAt(0)}
-                        </div>
+                    <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 p-1 shadow-lg shadow-indigo-500/30 shrink-0 z-10 overflow-hidden flex items-center justify-center">
+                        {formData.avatar ? (
+                            <img src={formData.avatar} alt="Profile" className="w-full h-full rounded-full object-cover bg-white dark:bg-[#0B0F19]" />
+                        ) : (
+                            <div className="w-full h-full rounded-full bg-white dark:bg-[#0B0F19] flex items-center justify-center text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-indigo-500 to-purple-600 uppercase">
+                                {formData.name.charAt(0)}
+                            </div>
+                        )}
                     </div>
                     <div className="z-10">
                         <h3 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mb-2 tracking-tight">{formData.name}</h3>
@@ -144,6 +166,48 @@ const EmployeeForm = () => {
                 <form onSubmit={handleSubmit} className="flex flex-col gap-8 w-full">
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="flex flex-col gap-3 relative group md:col-span-2 mb-2 items-center md:items-start">
+                            <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">Profile Picture (Optional)</label>
+                            <div className="flex items-center gap-6 w-full justify-center md:justify-start">
+                                <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                                    <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-slate-100 dark:border-[#1E293B] shadow-lg bg-slate-100 dark:bg-[#151D2C] shrink-0 relative transition-transform group-hover:scale-105">
+                                        {formData.avatar ? (
+                                            <img src={formData.avatar} alt="Profile" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-bold text-3xl">
+                                                {formData.name ? formData.name.charAt(0).toUpperCase() : 'U'}
+                                            </div>
+                                        )}
+                                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Camera className="text-white w-6 h-6" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="flex flex-col gap-2 relative">
+                                    <button
+                                        type="button"
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className="px-4 py-2 bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#2A374C] transition-colors shadow-sm"
+                                    >
+                                        Upload Picture
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setFormData(prev => ({ ...prev, avatar: '' }))}
+                                        className="px-4 py-2 bg-transparent text-sm font-bold text-rose-500 hover:text-rose-600 transition-colors text-left"
+                                    >
+                                        Remove Picture
+                                    </button>
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        className="hidden"
+                                        accept="image/png, image/jpeg, image/jpg"
+                                        onChange={handleImageUpload}
+                                    />
+                                </div>
+                            </div>
+                        </div>
                         {/* Name */}
                         <div className="flex flex-col gap-2 relative group">
                             <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">Full Name</label>

@@ -8,12 +8,14 @@ const FollowupSchema = new mongoose.Schema({
     customerResponse: { type: String }, // optional text
     remarks: { type: String }, // Employee comments
     nextFollowupDate: { type: Date },
+    nextFollowupTime: { type: String },
     status: {
         type: String,
         enum: ['Pending', 'Due Follow-up', 'Completed', 'Cancelled'],
         default: 'Pending'
     },
-    adminForced: { type: Boolean, default: false }
+    adminForced: { type: Boolean, default: false },
+    isDeleted: { type: Boolean, default: false }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Followup', FollowupSchema);

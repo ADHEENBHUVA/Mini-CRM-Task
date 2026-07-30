@@ -6,6 +6,10 @@ const UserSchema = new mongoose.Schema({
         required: true,
         default: 'New Employee'
     },
+    avatar: {
+        type: String,
+        default: ''
+    },
     email: {
         type: String,
         required: true,

@@ -11,6 +11,7 @@ import LeadDetails from './pages/LeadDetails';
 import Profile from './pages/Profile';
 import EmployeeDetails from './pages/Employee/EmployeeDetails';
 import Followups from './pages/Followups';
+import Trash from './pages/Trash';
 
 function AdminRoute({ children }) {
     const user = JSON.parse(localStorage.getItem('user')) || {};
@@ -45,6 +46,7 @@ function App() {
                     <Route path="leads/:id/edit" element={<LeadForm />} />
                     <Route path="followups" element={<Followups />} />
                     <Route path="profile" element={<Profile />} />
+                    <Route path="trash" element={<AdminRoute><Trash /></AdminRoute>} />
                 </Route>
 
                 <Route path="*" element={<Navigate to="/" />} />

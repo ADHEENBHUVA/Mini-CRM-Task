@@ -13,7 +13,7 @@ const Sidebar = ({ isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
         { label: 'Leads', icon: Briefcase, path: '/leads' },
         { label: 'Followups', icon: CalendarClock, path: '/followups' },
         { label: 'Profile', icon: User, path: '/profile' },
-        { label: 'Deleted Leads', icon: Trash2, path: '/leads?view=deleted' },
+        ...(isAdmin ? [{ label: 'System Trash', icon: Trash2, path: '/trash' }] : []),
     ];
 
     return (

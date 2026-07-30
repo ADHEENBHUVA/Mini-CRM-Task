@@ -6,11 +6,18 @@ exports.getFollowups = async (req, res) => {
     try {
         // Auto-update past pending followups to Due Follow-up
         await Followup.updateMany(
-            { status: 'Pending', followupDate: { $lte: new Date() } },
+            { status: 'Pending', followupDate: { $lte: new Date() }, isDeleted: { $ne: true } },
             { $set: { status: 'Due Follow-up' } }
         );
 
         let query = {};
+        if (req.query.isDeleted === 'true') {
+            query.isDeleted = true;
+        } else {
+            // Match both explicitly false AND undefined/missing isDeleted flag (for older records)
+            query.isDeleted = { $ne: true };
+        }
+
         if (req.user.role === 'Employee' || req.user.role === 'Standard') {
             query.employee = req.user.id;
         }
@@ -27,11 +34,11 @@ exports.getDueFollowupsCount = async (req, res) => {
     try {
         // Auto-update past pending followups to Due Follow-up
         await Followup.updateMany(
-            { status: 'Pending', followupDate: { $lte: new Date() } },
+            { status: 'Pending', followupDate: { $lte: new Date() }, isDeleted: { $ne: true } },
             { $set: { status: 'Due Follow-up' } }
         );
 
-        let query = { status: 'Due Follow-up' };
+        let query = { status: 'Due Follow-up', isDeleted: { $ne: true } };
 
         if (req.user.role === 'Employee' || req.user.role === 'Standard') {
             query.employee = req.user.id;
@@ -136,5 +143,38 @@ exports.forceFollowup = async (req, res) => {
         res.status(200).json({ message: 'Followup forced', followup });
     } catch (error) {
         res.status(500).json({ message: 'Error forcing followup', error });
+    }
+};
+
+// Soft delete followup
+exports.deleteFollowup = async (req, res) => {
+    try {
+        const followup = await Followup.findById(req.params.id);
+        if (!followup) return res.status(404).json({ message: 'Followup not found' });
+
+        if (req.query.hard === 'true') {
+            await Followup.findByIdAndDelete(req.params.id);
+            return res.status(200).json({ message: 'Followup permanently deleted' });
+        }
+
+        followup.isDeleted = true;
+        await followup.save();
+        res.status(200).json({ message: 'Followup moved to trash', followup });
+    } catch (error) {
+        res.status(500).json({ message: 'Error deleting followup', error });
+    }
+};
+
+// Restore followup
+exports.restoreFollowup = async (req, res) => {
+    try {
+        const followup = await Followup.findById(req.params.id);
+        if (!followup) return res.status(404).json({ message: 'Followup not found' });
+
+        followup.isDeleted = false;
+        await followup.save();
+        res.status(200).json({ message: 'Followup restored', followup });
+    } catch (error) {
+        res.status(500).json({ message: 'Error restoring followup', error });
     }
 };
