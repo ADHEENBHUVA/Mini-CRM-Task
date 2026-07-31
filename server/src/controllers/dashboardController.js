@@ -94,8 +94,8 @@ exports.getDashboardStats = async (req, res) => {
 
         // Fetch Monthly Data for the Bar Chart
         const sixMonthsAgo = new Date();
+        sixMonthsAgo.setDate(1); // Set to 1st to prevent month rollover
         sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
-        sixMonthsAgo.setDate(1);
         sixMonthsAgo.setHours(0, 0, 0, 0);
 
         const monthlyActivity = await Lead.aggregate([
@@ -115,6 +115,7 @@ exports.getDashboardStats = async (req, res) => {
         // Populate the last 6 months to ensure chart displays nicely even if no leads exist
         for (let i = 5; i >= 0; i--) {
             const d = new Date();
+            d.setDate(1); // Set to 1st to prevent month rollover
             d.setMonth(d.getMonth() - i);
             const m = d.getMonth() + 1; // 1-12
             const found = monthlyActivity.find(x => x._id === m);
